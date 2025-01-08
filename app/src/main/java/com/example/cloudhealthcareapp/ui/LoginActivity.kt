@@ -41,8 +41,8 @@ class LoginActivity : AppCompatActivity() {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this) { task ->
                         if (task.isSuccessful) {
-                            // Check user type and start the appropriate activity
-                            checkUserRoleAndRedirect()
+                            // Check user type and verification status
+                            checkUserRoleAndVerification()
                         } else {
                             Toast.makeText(baseContext, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                         }
@@ -57,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkUserRoleAndRedirect() {
+    private fun checkUserRoleAndVerification() {
         val user = auth.currentUser
         if (user != null) {
             val userId = user.uid
@@ -65,22 +65,33 @@ class LoginActivity : AppCompatActivity() {
             firestore.collection("patients").document(userId).get()
                 .addOnSuccessListener { patientDocument ->
                     if (patientDocument.exists()) {
-                        startActivity(Intent(this, PatientHomeActivity::class.java))
-                        finish()
+                        if (patientDocument.getBoolean("isVerified") == true) {
+                            startActivity(Intent(this, PatientHomeActivity::class.java))
+                            finish()
+                        } else {
+                            auth.signOut() // Sign out the user
+                            Toast.makeText(this, "Account not verified yet.", Toast.LENGTH_SHORT).show()
+                        }
                         return@addOnSuccessListener
                     }
                     // Check Doctor collection
                     firestore.collection("doctors").document(userId).get()
                         .addOnSuccessListener { doctorDocument ->
                             if (doctorDocument.exists()) {
-                                startActivity(Intent(this, DoctorHomeActivity::class.java))
-                                finish()
+                                if (doctorDocument.getBoolean("isVerified") == true) {
+                                    startActivity(Intent(this, DoctorHomeActivity::class.java))
+                                    finish()
+                                } else {
+                                    auth.signOut() // Sign out the user
+                                    Toast.makeText(this, "Account not verified yet.", Toast.LENGTH_SHORT).show()
+                                }
                                 return@addOnSuccessListener
                             }
                             // Check Admin collection
                             firestore.collection("administrators").document(userId).get()
                                 .addOnSuccessListener { adminDocument ->
                                     if (adminDocument.exists()) {
+                                        // Admins are considered verified by default
                                         startActivity(Intent(this, AdminHomeActivity::class.java))
                                         finish()
                                     } else {
@@ -89,6 +100,9 @@ class LoginActivity : AppCompatActivity() {
                                     }
                                 }
                         }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Error checking user role: ${it.message}", Toast.LENGTH_SHORT).show()
                 }
         }
     }

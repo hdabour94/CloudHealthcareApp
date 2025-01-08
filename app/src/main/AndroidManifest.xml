@@ -22,6 +22,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.admin.UserDetailsActivity"
+            android:exported="false" />
         <activity android:name=".ui.RegisterActivity" />
         <activity android:name=".ui.patient.PatientHomeActivity" />
         <activity android:name=".ui.patient.BookAppointmentActivity" />

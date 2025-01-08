@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -13,8 +12,6 @@ import com.example.cloudhealthcareapp.models.Administrator
 import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.ui.admin.AdminHomeActivity
-import com.example.cloudhealthcareapp.ui.doctor.DoctorHomeActivity
-import com.example.cloudhealthcareapp.ui.patient.PatientHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -102,11 +99,13 @@ class RegisterActivity : AppCompatActivity() {
             if (fullName.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() &&
                 idCardImageUri != null && profileImageUri != null
             ) {
+                // Check if the user is being created by an admin
+                val isAdmin = intent.getBooleanExtra("isAdmin", false)
                 auth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this) { task ->
                         if (task.isSuccessful) {
                             val userId = auth.currentUser?.uid ?: ""
-                            uploadImagesAndRegisterUser(userId, fullName, email, userType)
+                            uploadImagesAndRegisterUser(userId, fullName, email, userType, isAdmin)
                         } else {
                             Toast.makeText(
                                 baseContext,
@@ -126,7 +125,8 @@ class RegisterActivity : AppCompatActivity() {
         userId: String,
         fullName: String,
         email: String,
-        userType: String
+        userType: String,
+        isAdmin: Boolean
     ) {
         val idCardRef = storage.reference.child("idCards/$userId/${UUID.randomUUID()}")
         val profileImageRef = storage.reference.child("profileImages/$userId/${UUID.randomUUID()}")
@@ -146,7 +146,8 @@ class RegisterActivity : AppCompatActivity() {
                                     email,
                                     userType,
                                     idCardDownloadUri.toString(),
-                                    profileImageDownloadUri.toString()
+                                    profileImageDownloadUri.toString(),
+                                    isAdmin
                                 )
                             }
                         }
@@ -171,7 +172,8 @@ class RegisterActivity : AppCompatActivity() {
         email: String,
         userType: String,
         idCardImageUrl: String,
-        profileImageUrl: String
+        profileImageUrl: String,
+        isAdmin: Boolean
     ) {
         when (userType) {
             "Patient" -> {
@@ -179,14 +181,21 @@ class RegisterActivity : AppCompatActivity() {
                     userId = userId,
                     fullName = fullName,
                     email = email,
-                    idCardImageUrl = idCardImageUrl, // Store image URL
-                    profileImageUrl = profileImageUrl // Store image URL
+                    idCardImageUrl = idCardImageUrl,
+                    profileImageUrl = profileImageUrl,
+                    isVerified = isAdmin // Set isVerified based on admin creation
                 )
                 firestore.collection("patients").document(userId).set(patient)
                     .addOnSuccessListener {
                         Toast.makeText(this, "Patient registered successfully!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, PatientHomeActivity::class.java))
-                        finish()
+                        if (!isAdmin) {
+                            // Don't navigate to PatientHomeActivity
+                            // Instead, show a message and/or finish the activity
+                            Toast.makeText(this, "Your account will be activated by the admin.", Toast.LENGTH_LONG).show()
+                            finish() // Close RegisterActivity
+                        } else {
+                            finish()
+                        }
                     }
                     .addOnFailureListener { e ->
                         Toast.makeText(baseContext, "Registration failed: ${e.message}", Toast.LENGTH_SHORT)
@@ -200,13 +209,20 @@ class RegisterActivity : AppCompatActivity() {
                     fullName = fullName,
                     email = email,
                     idCardImageUrl = idCardImageUrl,
-                    profileImageUrl = profileImageUrl
+                    profileImageUrl = profileImageUrl,
+                    isVerified = isAdmin // Set isVerified based on admin creation
                 )
                 firestore.collection("doctors").document(userId).set(doctor)
                     .addOnSuccessListener {
                         Toast.makeText(this, "Doctor registered successfully!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, DoctorHomeActivity::class.java))
-                        finish()
+                        if (!isAdmin) {
+                            // Don't navigate to DoctorHomeActivity
+                            // Instead, show a message and/or finish the activity
+                            Toast.makeText(this, "Your account will be activated by the admin.", Toast.LENGTH_LONG).show()
+                            finish() // Close RegisterActivity
+                        } else {
+                            finish()
+                        }
                     }
                     .addOnFailureListener { e ->
                         Toast.makeText(baseContext, "Registration failed: ${e.message}", Toast.LENGTH_SHORT)
@@ -225,7 +241,6 @@ class RegisterActivity : AppCompatActivity() {
                 firestore.collection("administrators").document(userId).set(administrator)
                     .addOnSuccessListener {
                         Toast.makeText(this, "Administrator registered successfully!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, AdminHomeActivity::class.java))
                         finish()
                     }
                     .addOnFailureListener { e ->

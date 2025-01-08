@@ -8,9 +8,21 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
+import com.example.cloudhealthcareapp.models.*
+
+import com.google.firebase.firestore.QuerySnapshot
+
+import kotlinx.coroutines.tasks.await
+import com.example.cloudhealthcareapp.models.*
+import kotlinx.coroutines.tasks.await
+
+import com.example.cloudhealthcareapp.models.*
+import kotlinx.coroutines.tasks.await
+
 class FirebaseRepository {
 
-    private val db = Firebase.firestore
+    private val db = FirebaseFirestore.getInstance()
+
 
     suspend fun getDoctors(): List<Doctor> {
         return try {
@@ -61,5 +73,114 @@ class FirebaseRepository {
         }
     }
 
-    // TODO: Add functions for Admin operations (activate, deactivate, delete users)
+    suspend fun getAllUsers(): List<User> {
+        val users = mutableListOf<User>()
+        try {
+            val patients = db.collection("patients").get().await()
+            users.addAll(mapQuerySnapshotToUsers(patients, "Patient"))
+            val doctors = db.collection("doctors").get().await()
+            users.addAll(mapQuerySnapshotToUsers(doctors, "Doctor"))
+            // Add administrators to the list
+            val administrators = db.collection("administrators").get().await()
+            users.addAll(mapQuerySnapshotToUsers(administrators, "Administrator"))
+        } catch (e: Exception) {
+            throw e
+        }
+        return users
+    }
+
+    private fun mapQuerySnapshotToUsers(querySnapshot: QuerySnapshot, userType: String): List<User> {
+        return querySnapshot.documents.mapNotNull { document ->
+            val userId = document.id
+            val fullName = document.getString("fullName")
+            val email = document.getString("email")
+            // Handle isVerified for administrators (default to true if not present)
+            val isVerified = if (userType == "Administrator") {
+                document.getBoolean("isVerified") ?: true
+            } else {
+                document.getBoolean("isVerified") ?: false
+            }
+
+            if (userId != null && fullName != null && email != null) {
+                User(userId, fullName, email, userType, isVerified)
+            } else {
+                null
+            }
+        }
+    }
+    suspend fun getUserDetails(userId: String, userType: String): Any? {
+        return try {
+            val collectionName = when (userType) {
+                "Patient" -> "patients"
+                "Doctor" -> "doctors"
+                "Administrator" -> "administrators"
+                else -> throw IllegalArgumentException("Invalid user type")
+            }
+            val document = db.collection(collectionName).document(userId).get().await()
+            when (userType) {
+                "Patient" -> document.toObject(Patient::class.java)
+                "Doctor" -> document.toObject(Doctor::class.java)
+                "Administrator" -> document.toObject(Administrator::class.java)
+                else -> null
+            }
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    suspend fun updateUser(user: Any, userId: String, userType: String) {
+        try {
+            val collectionName = when (userType) {
+                "Patient" -> "patients"
+                "Doctor" -> "doctors"
+                "Administrator" -> "administrators"
+                else -> throw IllegalArgumentException("Invalid user type")
+            }
+            db.collection(collectionName).document(userId).set(user).await()
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    suspend fun activateUser(userId: String, userType: String) {
+        try {
+            val collectionName = when (userType) {
+                "Patient" -> "patients"
+                "Doctor" -> "doctors"
+                "Administrator" -> "administrators" // Add administrator case
+                else -> throw IllegalArgumentException("Invalid user type")
+            }
+            db.collection(collectionName).document(userId).update("isVerified", true).await()
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    suspend fun deactivateUser(userId: String, userType: String) {
+        try {
+            val collectionName = when (userType) {
+                "Patient" -> "patients"
+                "Doctor" -> "doctors"
+                "Administrator" -> "administrators" // Add administrator case
+                else -> throw IllegalArgumentException("Invalid user type")
+            }
+            db.collection(collectionName).document(userId).update("isVerified", false).await()
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    suspend fun deleteUser(userId: String, userType: String) {
+        try {
+            val collectionName = when (userType) {
+                "Patient" -> "patients"
+                "Doctor" -> "doctors"
+                "Administrator" -> "administrators" // Add administrator case
+                else -> throw IllegalArgumentException("Invalid user type")
+            }
+            db.collection(collectionName).document(userId).delete().await()
+        } catch (e: Exception) {
+            throw e
+        }
+    }
 }

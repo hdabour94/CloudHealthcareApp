@@ -1,4 +1,3 @@
-// Patient.kt
 package com.example.cloudhealthcareapp.models
 
 import com.google.firebase.firestore.PropertyName
@@ -12,6 +11,7 @@ data class Patient(
     @PropertyName("gender") var gender: String? = null,
     @PropertyName("address") var address: String? = null,
     @PropertyName("medicalHistory") var medicalHistory: String? = null,
-    @PropertyName("idCardImageUrl") var idCardImageUrl: String? = null, // Add ID card image URL
-    @PropertyName("profileImageUrl") var profileImageUrl: String? = null // Add profile image URL
+    @PropertyName("idCardImageUrl") var idCardImageUrl: String? = null,
+    @PropertyName("profileImageUrl") var profileImageUrl: String? = null,
+    @PropertyName("isVerified") var isVerified: Boolean? = false
 )

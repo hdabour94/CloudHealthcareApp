@@ -1,33 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="16dp">
 
     <EditText
-        android:id="@+id/userIdEditText"
+        android:id="@+id/searchEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="User ID"
+        android:layout_marginBottom="16dp"
+        android:hint="Search by name or email"
         android:minHeight="48dp" />
 
-    <Button
-        android:id="@+id/activateButton"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/usersRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Activate User" />
+        android:layout_height="match_parent"
+        android:layout_above="@+id/addUserButton"
+        android:layout_below="@id/searchEditText" />
 
-    <Button
-        android:id="@+id/deactivateButton"
-        android:layout_width="match_parent"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addUserButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Deactivate User" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/ic_add" />
 
-    <Button
-        android:id="@+id/deleteButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Delete User" />
-
-</LinearLayout>
+</RelativeLayout>
