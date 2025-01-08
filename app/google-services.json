@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "38963466832",
+    "firebase_url": "https://fir-f09b1-default-rtdb.firebaseio.com",
+    "project_id": "fir-f09b1",
+    "storage_bucket": "fir-f09b1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38963466832:android:806dfcad139ae0dffb3755",
+        "android_client_info": {
+          "package_name": "com.example.cloudhealthcareapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPKR_pwk83MVAnm2vNC3Q6VWEV5WdRE3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38963466832:android:5e1c8f8ab34c0139fb3755",
+        "android_client_info": {
+          "package_name": "com.example.firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPKR_pwk83MVAnm2vNC3Q6VWEV5WdRE3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:38963466832:android:b45d3588a9565918fb3755",
+        "android_client_info": {
+          "package_name": "com.example.healthcare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPKR_pwk83MVAnm2vNC3Q6VWEV5WdRE3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

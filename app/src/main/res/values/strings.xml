@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Cloud Healthcare App</string>
+    <string-array name="user_types">
+        <item>Patient</item>
+        <item>Doctor</item>
+        <item>Administrator</item>
+    </string-array>
+</resources>

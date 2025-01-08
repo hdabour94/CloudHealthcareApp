@@ -1,0 +1,12 @@
+package com.example.cloudhealthcareapp.models
+
+import com.google.firebase.firestore.PropertyName
+
+data class Doctor(
+    @PropertyName("userId") var userId: String? = null,
+    @PropertyName("fullName") var fullName: String? = null,
+    @PropertyName("email") var email: String? = null,
+    @PropertyName("specialty") var specialty: String? = null,
+    @PropertyName("qualifications") var qualifications: String? = null
+    // ... المزيد من الحقول
+)
