@@ -1,5 +1,6 @@
 package com.example.cloudhealthcareapp.repository
 
+import android.util.Log
 import com.example.cloudhealthcareapp.models.Appointment
 import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.MedicalRecord
@@ -183,4 +184,40 @@ class FirebaseRepository {
             throw e
         }
     }
+    suspend fun checkAppointmentConflict(doctorId: String, appointmentDateTime: String): Boolean {
+        return try {
+            val conflictingAppointments = db.collection("appointments")
+                .whereEqualTo("doctorId", doctorId)
+                .whereEqualTo("appointmentDateTime", appointmentDateTime)
+                .get()
+                .await()
+
+            !conflictingAppointments.isEmpty
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error checking appointment conflict: ${e.message}")
+            true // Assume conflict in case of error
+        }
+    }
+
+    // في FirebaseRepository.kt
+    suspend fun getBookedTimes(doctorId: String, date: String): List<String> {
+        return try {
+            val appointments = db.collection("appointments")
+                .whereEqualTo("doctorId", doctorId)
+                .whereGreaterThanOrEqualTo("appointmentDateTime", "$date ")
+                .whereLessThan("appointmentDateTime", "$date\uf8ff")
+                .get()
+                .await()
+
+            appointments.documents.mapNotNull {
+                // Extract the time part (HH:mm) from appointmentDateTime
+                it.getString("appointmentDateTime")?.substringAfter("$date ")
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error getting booked times: ${e.message}")
+            emptyList()
+        }
+    }
+
+
 }

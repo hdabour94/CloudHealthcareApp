@@ -6,6 +6,7 @@
     android:padding="16dp">
 
     <TextView
+        android:id="@+id/welcomeTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Welcome, Patient!"
@@ -18,16 +19,11 @@
         android:layout_weight="1" />
 
     <Button
-        android:id="@+id/bookAppointmentButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Book Appointment" />
-
-    <Button
         android:id="@+id/uploadMedicalRecordButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Upload Medical Record" />
+
     <Button
         android:id="@+id/viewAppointmentsButton"
         android:layout_width="match_parent"
