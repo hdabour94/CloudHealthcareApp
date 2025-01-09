@@ -31,6 +31,9 @@
         <activity android:name=".ui.patient.UploadMedicalRecordActivity" />
         <activity android:name=".ui.doctor.DoctorHomeActivity" />
         <activity android:name=".ui.doctor.DoctorAppointmentsActivity" />
+        <activity
+            android:name=".ui.patient.PatientAppointmentsActivity"
+            android:exported="false" />
         <activity android:name=".ui.doctor.AddDiagnosisActivity" />
         <activity android:name=".ui.admin.AdminHomeActivity" />
         <activity android:name=".ui.admin.ManageUsersActivity" />

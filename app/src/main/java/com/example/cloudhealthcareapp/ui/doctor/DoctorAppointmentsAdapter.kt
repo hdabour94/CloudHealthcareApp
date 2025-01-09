@@ -7,13 +7,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.Appointment
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 
 class DoctorAppointmentsAdapter(private var appointments: List<Appointment>) :
     RecyclerView.Adapter<DoctorAppointmentsAdapter.AppointmentViewHolder>() {
-
-    private val db = Firebase.firestore
 
     class AppointmentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val patientNameTextView: TextView = view.findViewById(R.id.patientNameTextView)
@@ -30,23 +26,7 @@ class DoctorAppointmentsAdapter(private var appointments: List<Appointment>) :
 
     override fun onBindViewHolder(holder: AppointmentViewHolder, position: Int) {
         val appointment = appointments[position]
-
-        // Get patient name from Firestore
-        appointment.patientId?.let { patientId ->
-            db.collection("patients").document(patientId).get()
-                .addOnSuccessListener { document ->
-                    if (document.exists()) {
-                        val patientName = document.getString("fullName") ?: "Unknown Patient"
-                        holder.patientNameTextView.text = patientName
-                    } else {
-                        holder.patientNameTextView.text = "Unknown Patient"
-                    }
-                }
-                .addOnFailureListener {
-                    holder.patientNameTextView.text = "Unknown Patient"
-                }
-        }
-
+        holder.patientNameTextView.text = appointment.patientName
         holder.appointmentDateTimeTextView.text = appointment.appointmentDateTime
         holder.statusTextView.text = appointment.status
     }

@@ -21,7 +21,6 @@ class PatientHomeActivity : AppCompatActivity() {
     private val viewModel: PatientViewModel by viewModels()
     private lateinit var doctorsRecyclerView: RecyclerView
     private lateinit var doctorsAdapter: DoctorsAdapter
-    private lateinit var bookAppointmentButton: Button // حــــــذف هــذا السـطـر
     private lateinit var uploadMedicalRecordButton: Button
     private lateinit var viewAppointmentsButton: Button
     private lateinit var welcomeTextView: TextView
@@ -31,7 +30,6 @@ class PatientHomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_patient_home)
 
         doctorsRecyclerView = findViewById(R.id.doctorsRecyclerView)
-        // bookAppointmentButton = findViewById(R.id.bookAppointmentButton) // حــــــذف هــذا السـطـر
         uploadMedicalRecordButton = findViewById(R.id.uploadMedicalRecordButton)
         viewAppointmentsButton = findViewById(R.id.viewAppointmentsButton)
         welcomeTextView = findViewById(R.id.welcomeTextView)
@@ -54,16 +52,12 @@ class PatientHomeActivity : AppCompatActivity() {
 
         viewModel.getDoctors()
 
-        // bookAppointmentButton.setOnClickListener { // حــــــذف هــذا الكــود
-        //     startActivity(Intent(this, BookAppointmentActivity::class.java))
-        // }
-
         uploadMedicalRecordButton.setOnClickListener {
             startActivity(Intent(this, UploadMedicalRecordActivity::class.java))
         }
 
         viewAppointmentsButton.setOnClickListener {
-            Toast.makeText(this, "View Appointments - Not yet implemented", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, PatientAppointmentsActivity::class.java))
         }
 
         // Get patient's name and update welcome message

@@ -199,7 +199,6 @@ class FirebaseRepository {
         }
     }
 
-    // في FirebaseRepository.kt
     suspend fun getBookedTimes(doctorId: String, date: String): List<String> {
         return try {
             val appointments = db.collection("appointments")
@@ -215,6 +214,31 @@ class FirebaseRepository {
             }
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error getting booked times: ${e.message}")
+            emptyList()
+        }
+    }
+    suspend fun getAppointmentsForPatient(patientId: String): List<Appointment> {
+        return try {
+            val snapshot = db.collection("appointments")
+                .whereEqualTo("patientId", patientId)
+                .get()
+                .await()
+            snapshot.toObjects(Appointment::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching appointments: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun getAppointmentsForDoctor(doctorId: String): List<Appointment> {
+        return try {
+            val snapshot = db.collection("appointments")
+                .whereEqualTo("doctorId", doctorId)
+                .get()
+                .await()
+            snapshot.toObjects(Appointment::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching appointments: ${e.message}")
             emptyList()
         }
     }

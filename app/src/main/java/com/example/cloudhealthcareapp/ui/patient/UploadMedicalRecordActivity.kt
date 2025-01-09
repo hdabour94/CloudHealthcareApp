@@ -7,7 +7,10 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.cloudhealthcareapp.R
@@ -15,6 +18,7 @@ import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.viewmodel.PatientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.UploadTask
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,10 +30,29 @@ class UploadMedicalRecordActivity : AppCompatActivity() {
     private lateinit var diagnosisEditText: EditText
     private lateinit var prescriptionEditText: EditText
     private lateinit var notesEditText: EditText
+    private lateinit var uploadProgressBar: ProgressBar
+    private lateinit var uploadStatusTextView: TextView
     private var selectedFileUri: Uri? = null
 
     companion object {
-        private const val PICK_FILE_REQUEST = 1
+        private const val MAX_FILE_SIZE_MB = 50
+    }
+
+    private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            selectedFileUri = result.data?.data
+            selectedFileUri?.let {
+                val fileSize = contentResolver.openFileDescriptor(it, "r")?.statSize ?: 0
+                val fileSizeMB = fileSize.toDouble() / (1024 * 1024)
+                if (fileSizeMB > MAX_FILE_SIZE_MB) {
+                    Toast.makeText(this, "File size too large. Max size is 50MB.", Toast.LENGTH_SHORT).show()
+                    selectedFileUri = null
+                } else {
+                    uploadStatusTextView.visibility = TextView.VISIBLE
+                    uploadStatusTextView.text = "File selected: ${it.path}"
+                }
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +64,8 @@ class UploadMedicalRecordActivity : AppCompatActivity() {
         diagnosisEditText = findViewById(R.id.diagnosisEditText)
         prescriptionEditText = findViewById(R.id.prescriptionEditText)
         notesEditText = findViewById(R.id.notesEditText)
+        uploadProgressBar = findViewById(R.id.uploadProgressBar)
+        uploadStatusTextView = findViewById(R.id.uploadStatusTextView)
 
         selectFileButton.setOnClickListener {
             openFileSelector()
@@ -53,41 +78,39 @@ class UploadMedicalRecordActivity : AppCompatActivity() {
 
     private fun openFileSelector() {
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "*/*" // Allow all file types
+            type = "*/*"
             addCategory(Intent.CATEGORY_OPENABLE)
         }
-        startActivityForResult(intent, PICK_FILE_REQUEST)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PICK_FILE_REQUEST && resultCode == Activity.RESULT_OK) {
-            selectedFileUri = data?.data
-            Toast.makeText(this, "File selected: ${selectedFileUri?.path}", Toast.LENGTH_SHORT).show()
-        }
+        pickFileLauncher.launch(intent)
     }
 
     private fun uploadFileAndRecord() {
         val patientId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val fileUri = selectedFileUri ?: return
+
+        uploadProgressBar.visibility = ProgressBar.VISIBLE
+        uploadStatusTextView.visibility = TextView.VISIBLE
+        uploadStatusTextView.text = "Uploading..."
+
         val storageRef = FirebaseStorage.getInstance().reference
         val fileRef = storageRef.child("medical_records/$patientId/${UUID.randomUUID()}")
 
         val uploadTask = fileRef.putFile(fileUri)
-        uploadTask.continueWithTask { task ->
-            if (!task.isSuccessful) {
-                task.exception?.let {
-                    throw it
-                }
+
+        uploadTask.addOnProgressListener { snapshot ->
+            val progress = (100.0 * snapshot.bytesTransferred / snapshot.totalByteCount).toInt()
+            uploadProgressBar.progress = progress
+            uploadStatusTextView.text = "Uploading... $progress%"
+        }.addOnSuccessListener {
+            uploadProgressBar.visibility = ProgressBar.GONE
+            uploadStatusTextView.text = "Upload successful!"
+            fileRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                saveMedicalRecord(patientId, downloadUri.toString())
             }
-            fileRef.downloadUrl
-        }.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val downloadUri = task.result.toString()
-                saveMedicalRecord(patientId, downloadUri)
-            } else {
-                Toast.makeText(this, "Upload failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-            }
+        }.addOnFailureListener { e ->
+            uploadProgressBar.visibility = ProgressBar.GONE
+            uploadStatusTextView.text = "Upload failed: ${e.message}"
+            Toast.makeText(this, "Upload failed: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -9,6 +9,9 @@ import com.example.cloudhealthcareapp.models.Appointment
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.repository.FirebaseRepository
 import kotlinx.coroutines.launch
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 class DoctorViewModel : ViewModel() {
 
@@ -27,6 +30,20 @@ class DoctorViewModel : ViewModel() {
                 _appointments.postValue(fetchedAppointments)
             } catch (e: Exception) {
                 Log.e("DoctorViewModel", "Error fetching appointments: ${e.message}")
+            }
+        }
+    }
+
+    fun getAppointmentsForDoctor() {
+        val doctorId = FirebaseAuth.getInstance().currentUser?.uid
+        if (doctorId != null) {
+            viewModelScope.launch {
+                try {
+                    val appointments = repository.getAppointmentsForDoctor(doctorId)
+                    _appointments.postValue(appointments)
+                } catch (e: Exception) {
+                    Log.e("DoctorViewModel", "Error fetching appointments: ${e.message}")
+                }
             }
         }
     }

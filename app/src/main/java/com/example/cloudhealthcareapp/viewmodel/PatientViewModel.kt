@@ -9,6 +9,7 @@ import com.example.cloudhealthcareapp.models.Appointment
 import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.repository.FirebaseRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,6 +28,9 @@ class PatientViewModel : ViewModel() {
 
     private val _checkAppointmentConflictResult = MutableLiveData<Boolean>()
     val checkAppointmentConflictResult: LiveData<Boolean> = _checkAppointmentConflictResult
+
+    private val _appointments = MutableLiveData<List<Appointment>>()
+    val appointments: LiveData<List<Appointment>> = _appointments
 
     fun getDoctors() {
         viewModelScope.launch {
@@ -84,7 +88,7 @@ class PatientViewModel : ViewModel() {
                 val bookedTimes = repository.getBookedTimes(doctorId, selectedDate)
                 val allTimes = generateAllTimes(selectedDate)
 
-                // Filter out booked times and times that overlap with booked ranges
+                // Filter out booked times
                 val filteredTimes = allTimes.filter { time ->
                     !bookedTimes.any { bookedTime ->
                         isTimeWithinBookedRange(time, bookedTime, 30)
@@ -153,5 +157,19 @@ class PatientViewModel : ViewModel() {
         return times
     }
 
-    // ... other code
+    // Add this function to your PatientViewModel
+    fun getAppointmentsForPatient() {
+        val patientId = FirebaseAuth.getInstance().currentUser?.uid
+        if (patientId != null) {
+            viewModelScope.launch {
+                try {
+                    val appointments = repository.getAppointmentsForPatient(patientId)
+                    _appointments.postValue(appointments)
+                } catch (e: Exception) {
+                    Log.e("PatientViewModel", "Error fetching appointments: ${e.message}")
+                }
+            }
+        }
+    }
+
 }
