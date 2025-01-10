@@ -20,8 +20,15 @@ import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.net.URLConnection
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -32,6 +39,7 @@ class MedicalRecordsAdapter(
 ) : RecyclerView.Adapter<MedicalRecordsAdapter.MedicalRecordViewHolder>() {
 
     private val storage = Firebase.storage
+    private val ioScope = CoroutineScope(Dispatchers.IO + Job())
 
     class MedicalRecordViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val fileTypeImageView: ImageView = view.findViewById(R.id.fileTypeImageView)
@@ -105,62 +113,63 @@ class MedicalRecordsAdapter(
     }
 
     private fun downloadAndOpenFile(context: Context, fileUrl: String) {
-        val storageRef = storage.getReferenceFromUrl(fileUrl)
-        val localFile = createTempFile(fileUrl)
-
-        storageRef.getFile(localFile).addOnSuccessListener {
-            // Local temp file has been created
-            val fileUri: Uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                localFile
-            )
-
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(fileUri, getMimeType(fileUrl))
-                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-
+        ioScope.launch { // Use ioScope for background thread
             try {
-                context.startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(context, "No app found to open this file type.", Toast.LENGTH_SHORT).show()
-                Log.e("MedicalRecordsAdapter", "No activity found to handle file: $fileUrl", e)
+                val tempFile = createTempFile(context, fileUrl) ?: throw IOException("Failed to create temp file")
+                val storageRef = storage.getReferenceFromUrl(fileUrl)
+
+                storageRef.getFile(tempFile).await() // Use await to suspend until download is complete
+
+                withContext(Dispatchers.Main) {
+                    // Get a URI for the file using FileProvider
+                    val fileUri: Uri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        tempFile
+                    )
+
+                    // Create an intent to view the file
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(fileUri, getMimeType(fileUrl))
+                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+
+                    // Start the activity to view the file
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        Toast.makeText(context, "No app found to open this file type.", Toast.LENGTH_SHORT).show()
+                        Log.e("MedicalRecordsAdapter", "No activity found to handle file: $fileUrl", e)
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Failed to download or open file.", Toast.LENGTH_SHORT).show()
+                    Log.e("MedicalRecordsAdapter", "Error handling file: $fileUrl", e)
+                }
             }
-        }.addOnFailureListener { exception ->
-            // Handle any errors
-            Log.e("MedicalRecordsAdapter", "Error downloading file: $fileUrl", exception)
-            Toast.makeText(context, "Failed to download file.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun createTempFile(fileUrl: String): File {
+    private fun createTempFile(context: Context, fileUrl: String): File? {
         val extension = fileUrl.substringAfterLast('.', "")
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val tempFileName = "TEMP_" + timeStamp + "_"
 
-        // Use the cache directory
-        val storageDir: File? = context.cacheDir
-
         return try {
+            val storageDir: File? = context.getExternalFilesDir(null)
             File.createTempFile(
                 tempFileName,  /* prefix */
-                ".$extension",  /* suffix */
+                ".$extension",         /* suffix */
                 storageDir      /* directory */
             )
         } catch (e: IOException) {
-            Log.e("MedicalRecordsAdapter", "Error creating temp file: $fileUrl", e)
-            throw e
+            Log.e("MedicalRecordsAdapter", "Error creating temp file: $e")
+            null
         }
     }
 
     private fun getMimeType(url: String): String {
-        return when {
-            url.endsWith(".jpg", true) || url.endsWith(".jpeg", true) -> "image/jpeg"
-            url.endsWith(".png", true) -> "image/png"
-            url.endsWith(".mp4", true) -> "video/mp4"
-            // Add more mime types as needed
-            else -> "*/*" // Default for unknown types
-        }
+        return URLConnection.guessContentTypeFromName(url) ?: "*/*"
     }
 }
