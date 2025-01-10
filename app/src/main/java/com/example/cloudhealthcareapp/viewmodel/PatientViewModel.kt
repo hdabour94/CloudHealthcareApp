@@ -163,15 +163,18 @@ class PatientViewModel : ViewModel() {
             timeCal.time = timeFormat.parse(time) ?: return false
             bookedCal.time = timeFormat.parse(bookedTime) ?: return false
             endBookedCal.time = timeFormat.parse(bookedTime) ?: return false
+            endBookedCal.add(Calendar.MINUTE, duration)
         } catch (e: Exception) {
             Log.e("PatientViewModel", "Error parsing time: ${e.message}")
             return false
         }
 
-        endBookedCal.add(Calendar.MINUTE, duration)
-
-        // Check if the time slot starts before the booked slot ends AND ends after the booked slot starts
-        return !(timeCal.before(bookedCal) && !timeCal.before(endBookedCal) || timeCal.after(endBookedCal))
+        // Check if the start of the time slot is before the end of the booked slot
+        // AND the end of the time slot is after the start of the booked slot
+        return timeCal.before(endBookedCal) && !timeCal.before(bookedCal)
+                || !timeCal.after(endBookedCal) && timeCal.after(bookedCal)
+                || timeCal.compareTo(bookedCal) == 0
+                || timeCal.compareTo(endBookedCal) == 0
     }
 
     private fun generateAllTimes(selectedDate: String, startCalendar: Calendar, endCalendar: Calendar): MutableList<String> {
@@ -180,23 +183,21 @@ class PatientViewModel : ViewModel() {
         val calendar = Calendar.getInstance()
         val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
 
-        if (selectedDate == currentDate) {
-            // If selected date is today, start from the next time slot that is at least 30 minutes from now
-            val currentTime = Calendar.getInstance()
-            calendar.time = currentTime.time
+        // Set the calendar to the start of the doctor's working hours for the selected date
+        calendar.set(Calendar.HOUR_OF_DAY, startCalendar.get(Calendar.HOUR_OF_DAY))
+        calendar.set(Calendar.MINUTE, startCalendar.get(Calendar.MINUTE))
+        calendar.set(Calendar.SECOND, 0)
 
-            // Round up to the next 30-minute slot
-            if (calendar.get(Calendar.MINUTE) > 0) {
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.add(Calendar.HOUR, 1)
+        if (selectedDate == currentDate) {
+            val currentTime = Calendar.getInstance()
+            // If it's today, start from the next upcoming slot that is at least 30 minutes from now
+            if (currentTime.after(calendar)) {
+                calendar.time = currentTime.time
+                calendar.add(Calendar.MINUTE, 30 - calendar.get(Calendar.MINUTE) % 30)
             }
-        } else {
-            // For future dates, start from the beginning of the doctor's day
-            calendar.set(Calendar.HOUR_OF_DAY, startCalendar.get(Calendar.HOUR_OF_DAY))
-            calendar.set(Calendar.MINUTE, startCalendar.get(Calendar.MINUTE))
-            calendar.set(Calendar.SECOND, 0)
         }
 
+        // Ensure we don't go past the end time
         val endTime = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, endCalendar.get(Calendar.HOUR_OF_DAY))
             set(Calendar.MINUTE, endCalendar.get(Calendar.MINUTE))
@@ -205,6 +206,7 @@ class PatientViewModel : ViewModel() {
 
         val appointmentDuration = 30 // Duration in minutes
 
+        // Generate times from the adjusted start time until the end time
         while (calendar.before(endTime)) {
             times.add(timeFormat.format(calendar.time))
             calendar.add(Calendar.MINUTE, appointmentDuration)

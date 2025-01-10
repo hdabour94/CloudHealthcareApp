@@ -3,6 +3,7 @@ package com.example.cloudhealthcareapp.ui.patient
 import android.app.DatePickerDialog
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -128,8 +129,6 @@ class BookAppointmentActivity : AppCompatActivity() {
     }
 
     private fun showDatePicker() {
-
-
         val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             calendar.set(Calendar.YEAR, year)
             calendar.set(Calendar.MONTH, month)
@@ -139,8 +138,13 @@ class BookAppointmentActivity : AppCompatActivity() {
             // Update available times when a new date is selected
             selectedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
             if (doctorId != null) {
-                viewModel.getAvailableTimes(doctorId!!, selectedDate!!).observe(this) { times ->
+                // Show a progress indicator or disable interaction while fetching
+                availableTimesRecyclerView.visibility = View.GONE
+                // Fetch available times
+                viewModel.getAvailableTimes(doctorId!!, selectedDate!!).observe(this@BookAppointmentActivity) { times ->
+                    Log.d("Available times", times.toString())
                     availableTimesAdapter.updateTimes(times)
+                    availableTimesRecyclerView.visibility = View.VISIBLE // Show the RecyclerView again
                 }
             }
         }
