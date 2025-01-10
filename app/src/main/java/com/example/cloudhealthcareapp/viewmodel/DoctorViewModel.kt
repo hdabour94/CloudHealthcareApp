@@ -49,6 +49,12 @@ class DoctorViewModel : ViewModel() {
     private val _medicalRecords = MutableLiveData<List<MedicalRecord>>()
     val medicalRecords: LiveData<List<MedicalRecord>> = _medicalRecords
 
+    private val _diagnosis = MutableLiveData<List<MedicalRecord>>()
+    val diagnosis: LiveData<List<MedicalRecord>> = _diagnosis
+
+    private val _prescriptions = MutableLiveData<List<Map<String, String>>>()
+    val prescriptions: LiveData<List<Map<String, String>>> = _prescriptions
+
     fun getAppointmentsForDoctor() {
         val doctorId = FirebaseAuth.getInstance().currentUser?.uid
         if (doctorId != null) {
@@ -193,4 +199,27 @@ class DoctorViewModel : ViewModel() {
             }
         }
     }
+
+    fun fetchDiagnosis(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val diagnosis = repository.getDiagnosisForPatient(patientId)
+                _diagnosis.postValue(diagnosis)
+            } catch (e: Exception) {
+                Log.e("DoctorViewModel", "Error fetching diagnosis: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchPrescriptions(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val prescriptions = repository.getPrescriptionsForPatient(patientId)
+                _prescriptions.postValue(prescriptions)
+            } catch (e: Exception) {
+                Log.e("DoctorViewModel", "Error fetching prescriptions: ${e.message}")
+            }
+        }
+    }
+
 }

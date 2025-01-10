@@ -481,5 +481,40 @@ class FirebaseRepository {
         }
     }
 
+    suspend fun getDiagnosisForPatient(patientId: String): List<MedicalRecord> {
+        return try {
+            val snapshot = db.collection("medicalRecords")
+                .whereEqualTo("patientId", patientId)
+                .whereNotEqualTo("diagnosis", null)
+                .get()
+                .await()
+            snapshot.toObjects(MedicalRecord::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching diagnosis records: ${e.message}", e)
+            emptyList()
+        }
+    }
+
+    suspend fun getPrescriptionsForPatient(patientId: String): List<Map<String, String>> {
+        return try {
+            val snapshot = db.collection("patients").document(patientId)
+                .collection("prescriptions")
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { doc ->
+                val prescriptionText = doc.getString("prescriptionText")
+                val date = doc.getString("date")
+                if (prescriptionText != null && date != null) {
+                    mapOf("prescriptionText" to prescriptionText, "date" to date)
+                } else {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching prescriptions: ${e.message}", e)
+            emptyList()
+        }
+    }
+
 
 }

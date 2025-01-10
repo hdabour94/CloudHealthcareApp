@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.Doctor
+import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.viewmodel.AdminViewModel
 import com.example.cloudhealthcareapp.viewmodel.DoctorViewModel
@@ -37,6 +38,10 @@ class PatientDetailsActivity : AppCompatActivity() {
     private lateinit var userId: String
     private lateinit var medicalRecordsRecyclerView: RecyclerView
     private lateinit var medicalRecordsAdapter: MedicalRecordsAdapter
+    private lateinit var diagnosisRecyclerView: RecyclerView
+    private lateinit var diagnosisAdapter: DiagnosisAdapter
+    private lateinit var prescriptionsRecyclerView: RecyclerView
+    private lateinit var prescriptionsAdapter: PrescriptionsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,22 +57,53 @@ class PatientDetailsActivity : AppCompatActivity() {
         addDiagnosisButton = findViewById(R.id.addDiagnosisButton)
         writePrescriptionButton = findViewById(R.id.writePrescriptionButton)
         medicalRecordsRecyclerView = findViewById(R.id.medicalRecordsRecyclerView)
+        diagnosisRecyclerView = findViewById(R.id.diagnosisRecyclerView)
+        prescriptionsRecyclerView = findViewById(R.id.prescriptionsRecyclerView)
 
         userId = intent.getStringExtra("userId") ?: ""
         userType = intent.getStringExtra("userType") ?: ""
 
+        // Setup RecyclerView for medical records
         medicalRecordsAdapter = MedicalRecordsAdapter(this, emptyList())
         medicalRecordsRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@PatientDetailsActivity)
             adapter = medicalRecordsAdapter
         }
 
+        // Setup RecyclerView for diagnosis records
+        diagnosisAdapter = DiagnosisAdapter(emptyList())
+        diagnosisRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@PatientDetailsActivity)
+            adapter = diagnosisAdapter
+        }
+
+        // Setup RecyclerView for prescriptions
+        prescriptionsAdapter = PrescriptionsAdapter(emptyList())
+        prescriptionsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@PatientDetailsActivity)
+            adapter = prescriptionsAdapter
+        }
+
+        // Observe the medical records LiveData
         doctorViewModel.medicalRecords.observe(this) { medicalRecords ->
             medicalRecordsAdapter.updateMedicalRecords(medicalRecords)
         }
 
+        // Observe the diagnosis LiveData
+        doctorViewModel.diagnosis.observe(this) { diagnosis ->
+            diagnosisAdapter.updateDiagnosis(diagnosis)
+        }
+
+        // Observe the prescriptions LiveData
+        doctorViewModel.prescriptions.observe(this) { prescriptions ->
+            prescriptionsAdapter.updatePrescriptions(prescriptions)
+        }
+
+        // Fetch data based on user type
         if (userType == "Patient") {
             doctorViewModel.fetchMedicalRecords(userId)
+            doctorViewModel.fetchDiagnosis(userId)
+            doctorViewModel.fetchPrescriptions(userId)
         }
 
         viewModel.getUserDetails(userId, userType)
@@ -79,7 +115,7 @@ class PatientDetailsActivity : AppCompatActivity() {
                     emailEditText.setText(user.email)
                     phoneEditText.setText(user.phone)
                     addressEditText.setText(user.address)
-                    specialtyEditText.visibility = View.GONE
+                    specialtyEditText.visibility = EditText.GONE
 
                     Glide.with(this).load(user.profileImageUrl).into(profileImageView)
                     Glide.with(this).load(user.idCardImageUrl).into(idCardImageView)
@@ -88,13 +124,12 @@ class PatientDetailsActivity : AppCompatActivity() {
                     fullNameEditText.setText(user.fullName)
                     emailEditText.setText(user.email)
                     phoneEditText.setText(user.phone)
-                    addressEditText.visibility = View.GONE
+                    addressEditText.visibility = EditText.GONE
                     specialtyEditText.setText(user.specialty)
 
                     Glide.with(this).load(user.profileImageUrl).into(profileImageView)
                     Glide.with(this).load(user.idCardImageUrl).into(idCardImageView)
                 }
-                // Handle Administrator if needed
             }
         }
 
