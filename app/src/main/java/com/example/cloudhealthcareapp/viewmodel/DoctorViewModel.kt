@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cloudhealthcareapp.models.Appointment
-import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.repository.FirebaseRepository
@@ -68,7 +67,6 @@ class DoctorViewModel : ViewModel() {
                 try {
                     val patients = repository.getPatientsForDoctor(doctorId)
                     _patients.postValue(patients)
-                    Log.d("DoctorViewModel", "Fetched patients: ${patients.size}")
                 } catch (e: Exception) {
                     Log.e("DoctorViewModel", "Error fetching patients: ${e.message}")
                 }
@@ -134,6 +132,15 @@ class DoctorViewModel : ViewModel() {
             try {
                 repository.updateAppointmentStatus(appointment.appointmentId!!, "accepted")
                 _appointmentAcceptanceResult.postValue(true)
+                // Send notification to patient
+                val patient = repository.getPatient(appointment.patientId!!) // Assuming you have this function
+                if (patient != null && patient.fcmToken != null) {
+                    repository.sendNotificationToPatient(
+                        patient.fcmToken!!,
+                        "Appointment Accepted",
+                        "Your appointment on ${appointment.appointmentDateTime} has been accepted."
+                    )
+                }
             } catch (e: Exception) {
                 Log.e("DoctorViewModel", "Error accepting appointment: ${e.message}")
                 _appointmentAcceptanceResult.postValue(false)
@@ -146,6 +153,15 @@ class DoctorViewModel : ViewModel() {
             try {
                 repository.updateAppointmentStatus(appointment.appointmentId!!, "rejected")
                 _appointmentRejectionResult.postValue(true)
+                // Send notification to patient
+                val patient = repository.getPatient(appointment.patientId!!) // Assuming you have this function
+                if (patient != null && patient.fcmToken != null) {
+                    repository.sendNotificationToPatient(
+                        patient.fcmToken!!,
+                        "Appointment Rejected",
+                        "Your appointment on ${appointment.appointmentDateTime} has been rejected."
+                    )
+                }
             } catch (e: Exception) {
                 Log.e("DoctorViewModel", "Error rejecting appointment: ${e.message}")
                 _appointmentRejectionResult.postValue(false)

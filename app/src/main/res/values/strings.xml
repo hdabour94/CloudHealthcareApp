@@ -5,4 +5,8 @@
         <item>Doctor</item>
         <item>Administrator</item>
     </string-array>
+    <string-array name="user_types_without_admin">
+        <item>Patient</item>
+        <item>Doctor</item>
+    </string-array>
 </resources>

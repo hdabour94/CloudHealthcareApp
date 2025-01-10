@@ -17,5 +17,6 @@ data class Doctor(
     @PropertyName("startTime") var startTime: String? = null, // e.g., "09:00"
     @PropertyName("endTime") var endTime: String? = null,     // e.g., "17:00"
     @PropertyName("vacationDays") var vacationDays: List<String>? = null, // e.g., ["2024-03-21", "2024-03-22"]
-    @PropertyName("weeklyDaysOff") var weeklyDaysOff: List<Int>? = null // e.g., [Calendar.SATURDAY, Calendar.SUNDAY]
+    @PropertyName("weeklyDaysOff") var weeklyDaysOff: List<Int>? = null, // e.g., [Calendar.SATURDAY, Calendar.SUNDAY]
+    @PropertyName("fcmToken") var fcmToken: String? = null
 )

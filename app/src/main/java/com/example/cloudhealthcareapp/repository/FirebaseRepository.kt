@@ -18,9 +18,14 @@ import java.util.Locale
 
 
 
+import com.example.cloudhealthcareapp.models.*
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.ktx.functions
+
 class FirebaseRepository {
 
     private val db = FirebaseFirestore.getInstance()
+    private val functions = Firebase.functions("europe-west1")
 
 
     suspend fun getDoctors(): List<Doctor> {
@@ -282,11 +287,20 @@ class FirebaseRepository {
                     patients.add(patientData)
                 }
             }
-            Log.d("FirebaseRepository", "Patients fetched for doctor $doctorId: ${patients.size}")
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error fetching patients for doctor: ${e.message}")
         }
         return patients
+    }
+
+    suspend fun getPatient(patientId: String): Patient? {
+        return try {
+            val document = db.collection("patients").document(patientId).get().await()
+            document.toObject(Patient::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching patient: ${e.message}", e)
+            null
+        }
     }
 
     suspend fun getNewPatients(doctorId: String): List<Patient> {
@@ -431,6 +445,27 @@ class FirebaseRepository {
             Log.e("FirebaseRepository", "Error saving prescription: ${e.message}")
             throw e
         }
+    }
+    fun sendNotificationToPatient(token: String, title: String, body: String) {
+        val data = hashMapOf(
+            "to" to token,
+            "notification" to hashMapOf(
+                "title" to title,
+                "body" to body
+            )
+        )
+
+        functions
+            .getHttpsCallable("sendNotification")
+            .call(data)
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    val e = task.exception
+                    Log.w("FirebaseRepository", "sendNotification:failure", e)
+                } else {
+                    Log.d("FirebaseRepository", "sendNotification:success")
+                }
+            }
     }
 
 

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -12,8 +13,11 @@ import com.example.cloudhealthcareapp.models.Administrator
 import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.ui.admin.AdminHomeActivity
+import com.example.cloudhealthcareapp.ui.doctor.DoctorHomeActivity
+import com.example.cloudhealthcareapp.ui.patient.PatientHomeActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import java.util.*
 
@@ -69,7 +73,7 @@ class RegisterActivity : AppCompatActivity() {
         // Setup Spinner
         ArrayAdapter.createFromResource(
             this,
-            R.array.user_types,
+            R.array.user_types_without_admin,
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -105,7 +109,16 @@ class RegisterActivity : AppCompatActivity() {
                     .addOnCompleteListener(this) { task ->
                         if (task.isSuccessful) {
                             val userId = auth.currentUser?.uid ?: ""
-                            uploadImagesAndRegisterUser(userId, fullName, email, userType, isAdmin)
+                            // Get the FCM token and then upload images and register user
+                            FirebaseMessaging.getInstance().token.addOnCompleteListener { tokenTask ->
+                                if (tokenTask.isSuccessful) {
+                                    val fcmToken = tokenTask.result
+                                    uploadImagesAndRegisterUser(userId, fullName, email, userType, isAdmin, fcmToken)
+                                } else {
+                                    Log.e("RegisterActivity", "Failed to get FCM token: ${tokenTask.exception?.message}")
+                                    Toast.makeText(baseContext, "Failed to get FCM token.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         } else {
                             Toast.makeText(
                                 baseContext,
@@ -126,7 +139,8 @@ class RegisterActivity : AppCompatActivity() {
         fullName: String,
         email: String,
         userType: String,
-        isAdmin: Boolean
+        isAdmin: Boolean,
+        fcmToken: String?
     ) {
         val idCardRef = storage.reference.child("idCards/$userId/${UUID.randomUUID()}")
         val profileImageRef = storage.reference.child("profileImages/$userId/${UUID.randomUUID()}")
@@ -147,7 +161,8 @@ class RegisterActivity : AppCompatActivity() {
                                     userType,
                                     idCardDownloadUri.toString(),
                                     profileImageDownloadUri.toString(),
-                                    isAdmin
+                                    isAdmin,
+                                    fcmToken
                                 )
                             }
                         }
@@ -173,7 +188,8 @@ class RegisterActivity : AppCompatActivity() {
         userType: String,
         idCardImageUrl: String,
         profileImageUrl: String,
-        isAdmin: Boolean
+        isAdmin: Boolean,
+        fcmToken: String?
     ) {
         when (userType) {
             "Patient" -> {
@@ -183,7 +199,8 @@ class RegisterActivity : AppCompatActivity() {
                     email = email,
                     idCardImageUrl = idCardImageUrl,
                     profileImageUrl = profileImageUrl,
-                    isVerified = isAdmin // Set isVerified based on admin creation
+                    isVerified = isAdmin, // Set isVerified based on admin creation
+                    fcmToken = fcmToken
                 )
                 firestore.collection("patients").document(userId).set(patient)
                     .addOnSuccessListener {
@@ -210,7 +227,8 @@ class RegisterActivity : AppCompatActivity() {
                     email = email,
                     idCardImageUrl = idCardImageUrl,
                     profileImageUrl = profileImageUrl,
-                    isVerified = isAdmin // Set isVerified based on admin creation
+                    isVerified = isAdmin, // Set isVerified based on admin creation
+                    fcmToken = fcmToken
                 )
                 firestore.collection("doctors").document(userId).set(doctor)
                     .addOnSuccessListener {
@@ -236,7 +254,8 @@ class RegisterActivity : AppCompatActivity() {
                     fullName = fullName,
                     email = email,
                     idCardImageUrl = idCardImageUrl,
-                    profileImageUrl = profileImageUrl
+                    profileImageUrl = profileImageUrl,
+                    fcmToken = fcmToken
                 )
                 firestore.collection("administrators").document(userId).set(administrator)
                     .addOnSuccessListener {
@@ -249,6 +268,5 @@ class RegisterActivity : AppCompatActivity() {
                     }
             }
         }
-
     }
 }

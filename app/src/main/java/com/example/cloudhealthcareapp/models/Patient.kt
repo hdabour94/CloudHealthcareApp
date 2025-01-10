@@ -13,5 +13,6 @@ data class Patient(
     @PropertyName("medicalHistory") var medicalHistory: String? = null,
     @PropertyName("idCardImageUrl") var idCardImageUrl: String? = null,
     @PropertyName("profileImageUrl") var profileImageUrl: String? = null,
-    @PropertyName("isVerified") var isVerified: Boolean? = false
+    @PropertyName("isVerified") var isVerified: Boolean? = false,
+    @PropertyName("fcmToken") var fcmToken: String? = null
 )
