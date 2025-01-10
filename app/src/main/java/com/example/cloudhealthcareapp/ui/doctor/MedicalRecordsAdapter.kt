@@ -17,12 +17,11 @@ import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
-//import com.example.cloudhealthcareapp.BuildConfig // Import BuildConfig
+import com.example.cloudhealthcareapp.BuildConfig // Import BuildConfig
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import firebase.com.protolitewrapper.BuildConfig
 import java.io.File
 import java.io.IOException
 
