@@ -15,6 +15,7 @@
         android:id="@+id/manageUsersButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Manage Users" />
 
     <Button
@@ -22,5 +23,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Manage Billing" />
+
+    <Button
+        android:id="@+id/signOutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sign Out" />
 
 </LinearLayout>

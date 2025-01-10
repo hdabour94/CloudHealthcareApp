@@ -468,5 +468,18 @@ class FirebaseRepository {
             }
     }
 
+    suspend fun getMedicalRecordsForPatient(patientId: String): List<MedicalRecord> {
+        return try {
+            val snapshot = db.collection("medicalRecords")
+                .whereEqualTo("patientId", patientId)
+                .get()
+                .await()
+            snapshot.toObjects(MedicalRecord::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching medical records: ${e.message}", e)
+            emptyList()
+        }
+    }
+
 
 }

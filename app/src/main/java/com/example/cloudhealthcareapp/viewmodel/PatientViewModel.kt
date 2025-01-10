@@ -115,7 +115,7 @@ class PatientViewModel : ViewModel() {
                     val allTimes = generateAllTimes(selectedDate, startCalendar, endCalendar)
                     val filteredTimes = allTimes.filter { time ->
                         !bookedTimes.any { bookedTime ->
-                            isTimeWithinBookedRange(time, bookedTime, 30)
+                            isTimeWithinBookedRange(time, bookedTime, 29)
                         }
                     }
                     availableTimes.postValue(filteredTimes)

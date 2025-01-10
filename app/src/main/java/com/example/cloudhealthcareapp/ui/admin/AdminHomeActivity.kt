@@ -5,11 +5,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import com.example.cloudhealthcareapp.R
+import com.example.cloudhealthcareapp.ui.LoginActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class AdminHomeActivity : AppCompatActivity() {
 
     private lateinit var manageUsersButton: Button
     private lateinit var manageBillingButton: Button
+    private lateinit var signOutButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,6 +20,7 @@ class AdminHomeActivity : AppCompatActivity() {
 
         manageUsersButton = findViewById(R.id.manageUsersButton)
         manageBillingButton = findViewById(R.id.manageBillingButton)
+        signOutButton = findViewById(R.id.signOutButton)
 
         manageUsersButton.setOnClickListener {
             startActivity(Intent(this, ManageUsersActivity::class.java))
@@ -24,6 +28,12 @@ class AdminHomeActivity : AppCompatActivity() {
 
         manageBillingButton.setOnClickListener {
             startActivity(Intent(this, BillingActivity::class.java))
+        }
+
+        signOutButton.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
     }
 }

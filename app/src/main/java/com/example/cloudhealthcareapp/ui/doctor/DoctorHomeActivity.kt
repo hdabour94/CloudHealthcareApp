@@ -2,7 +2,6 @@ package com.example.cloudhealthcareapp.ui.doctor
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.services.AppointmentCleanupJobService
+import com.example.cloudhealthcareapp.ui.LoginActivity
 import com.example.cloudhealthcareapp.viewmodel.DoctorViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -20,6 +20,7 @@ class DoctorHomeActivity : AppCompatActivity() {
     private lateinit var appointmentsAdapter: DoctorAppointmentsAdapter
     private lateinit var viewPatientsButton: Button
     private lateinit var viewAppointmentRequestsButton: Button
+    private lateinit var signOutButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +29,7 @@ class DoctorHomeActivity : AppCompatActivity() {
         appointmentsRecyclerView = findViewById(R.id.appointmentsRecyclerView)
         viewPatientsButton = findViewById(R.id.viewPatientsButton)
         viewAppointmentRequestsButton = findViewById(R.id.viewAppointmentRequestsButton)
+        signOutButton = findViewById(R.id.signOutButton)
 
         appointmentsAdapter = DoctorAppointmentsAdapter(emptyList())
         appointmentsRecyclerView.apply {
@@ -39,7 +41,6 @@ class DoctorHomeActivity : AppCompatActivity() {
         viewModel.getAppointmentsForDoctor()
 
         viewModel.appointments.observe(this) { appointments ->
-            Log.d("DoctorHomeActivity", "Appointments received: ${appointments.size}")
             appointmentsAdapter.updateAppointments(appointments)
         }
 
@@ -50,6 +51,13 @@ class DoctorHomeActivity : AppCompatActivity() {
         viewAppointmentRequestsButton.setOnClickListener {
             startActivity(Intent(this, AppointmentRequestsActivity::class.java))
         }
+
+        signOutButton.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish() // Close DoctorHomeActivity
+        }
+
         // Schedule the job when the activity is created
         AppointmentCleanupJobService.scheduleJob(this)
     }

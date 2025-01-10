@@ -33,6 +33,11 @@ class LoginActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
+        // Check if user is already logged in
+        if (auth.currentUser != null) {
+            checkUserRoleAndRedirect()
+        }
+
         loginButton.setOnClickListener {
             val email = emailEditText.text.toString()
             val password = passwordEditText.text.toString()
@@ -96,6 +101,41 @@ class LoginActivity : AppCompatActivity() {
                                         finish()
                                     } else {
                                         // User not found in any collection
+                                        Toast.makeText(this, "User role not found.", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Error checking user role: ${it.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun checkUserRoleAndRedirect() {
+        val user = auth.currentUser
+        if (user != null) {
+            val userId = user.uid
+            firestore.collection("patients").document(userId).get()
+                .addOnSuccessListener { patientDocument ->
+                    if (patientDocument.exists()) {
+                        startActivity(Intent(this, PatientHomeActivity::class.java))
+                        finish()
+                        return@addOnSuccessListener
+                    }
+                    firestore.collection("doctors").document(userId).get()
+                        .addOnSuccessListener { doctorDocument ->
+                            if (doctorDocument.exists()) {
+                                startActivity(Intent(this, DoctorHomeActivity::class.java))
+                                finish()
+                                return@addOnSuccessListener
+                            }
+                            firestore.collection("administrators").document(userId).get()
+                                .addOnSuccessListener { adminDocument ->
+                                    if (adminDocument.exists()) {
+                                        startActivity(Intent(this, AdminHomeActivity::class.java))
+                                        finish()
+                                    } else {
                                         Toast.makeText(this, "User role not found.", Toast.LENGTH_SHORT).show()
                                     }
                                 }

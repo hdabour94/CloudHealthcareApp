@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cloudhealthcareapp.models.Appointment
+import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.repository.FirebaseRepository
@@ -44,6 +45,9 @@ class DoctorViewModel : ViewModel() {
 
     private val _prescriptionSaveResult = MutableLiveData<Boolean>()
     val prescriptionSaveResult: LiveData<Boolean> = _prescriptionSaveResult
+
+    private val _medicalRecords = MutableLiveData<List<MedicalRecord>>()
+    val medicalRecords: LiveData<List<MedicalRecord>> = _medicalRecords
 
     fun getAppointmentsForDoctor() {
         val doctorId = FirebaseAuth.getInstance().currentUser?.uid
@@ -179,5 +183,14 @@ class DoctorViewModel : ViewModel() {
             }
         }
     }
-
+    fun fetchMedicalRecords(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val records = repository.getMedicalRecordsForPatient(patientId)
+                _medicalRecords.postValue(records)
+            } catch (e: Exception) {
+                Log.e("DoctorViewModel", "Error fetching medical records: ${e.message}")
+            }
+        }
+    }
 }
