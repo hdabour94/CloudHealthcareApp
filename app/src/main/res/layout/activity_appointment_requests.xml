@@ -8,12 +8,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Your Appointments"
+        android:text="Appointment Requests"
         android:textSize="20sp"
         android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/doctorAppointmentsRecyclerView"
+        android:id="@+id/requestsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

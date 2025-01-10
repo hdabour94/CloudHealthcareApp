@@ -8,17 +8,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
-
 import com.example.cloudhealthcareapp.models.*
-
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
-import kotlinx.coroutines.tasks.await
-import com.example.cloudhealthcareapp.models.*
-import kotlinx.coroutines.tasks.await
 
-import com.example.cloudhealthcareapp.models.*
-import kotlinx.coroutines.tasks.await
 
 class FirebaseRepository {
 
@@ -70,6 +67,7 @@ class FirebaseRepository {
         try {
             db.collection("medicalRecords").document(record.recordId!!).set(record).await()
         } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error adding medical record: ${e.message}")
             throw e
         }
     }
@@ -230,15 +228,191 @@ class FirebaseRepository {
         }
     }
 
-    suspend fun getAppointmentsForDoctor(doctorId: String): List<Appointment> {
+    suspend fun getAppointmentsForDoctor(doctorId: String, type: String = "all"): List<Appointment> {
+        return try {
+            val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
+            val query = db.collection("appointments")
+                .whereEqualTo("doctorId", doctorId)
+                .orderBy("appointmentDateTime", Query.Direction.ASCENDING)
+
+            val snapshot = when (type) {
+                "upcoming" -> query
+                    .whereGreaterThanOrEqualTo("appointmentDateTime", currentTime)
+                    .whereIn("status", listOf("pending", "accepted"))
+                "past" -> query
+                    .whereLessThan("appointmentDateTime", currentTime)
+                    .whereIn("status", listOf("completed", "rejected")) // Assuming you have a "rejected" status
+                else -> query
+                    .whereIn("status", listOf("pending", "accepted"))
+            }.get().await()
+
+            snapshot.toObjects(Appointment::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching appointments: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun getDoctor(doctorId: String): Doctor? {
+        return try {
+            val document = db.collection("doctors").document(doctorId).get().await()
+            document.toObject(Doctor::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching doctor: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun getPatientsForDoctor(doctorId: String): List<Patient> {
+        val patients = mutableListOf<Patient>()
+        try {
+            val appointments = db.collection("appointments")
+                .whereEqualTo("doctorId", doctorId)
+                .get()
+                .await()
+
+            val patientIds = appointments.documents.mapNotNull { it.getString("patientId") }.distinct()
+
+            for (patientId in patientIds) {
+                val patient = db.collection("patients").document(patientId).get().await()
+                val patientData = patient.toObject(Patient::class.java)
+                if (patientData != null) {
+                    patientData.userId = patientId // Set the document ID as userId
+                    patients.add(patientData)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching patients for doctor: ${e.message}")
+        }
+        return patients
+    }
+
+    suspend fun getNewPatients(doctorId: String): List<Patient> {
+        val newPatients = mutableListOf<Patient>()
+        try {
+            // Get the current date and the date one month ago
+            val currentDate = Calendar.getInstance()
+            val oneMonthAgo = Calendar.getInstance()
+            oneMonthAgo.add(Calendar.MONTH, -1)
+
+            // Format the dates to strings for comparison
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val currentDateString = formatter.format(currentDate.time)
+            val oneMonthAgoString = formatter.format(oneMonthAgo.time)
+
+            // Fetch all appointments for the doctor within the last month
+            val appointments = db.collection("appointments")
+                .whereEqualTo("doctorId", doctorId)
+                .whereGreaterThanOrEqualTo("appointmentDateTime", oneMonthAgoString)
+                .whereLessThanOrEqualTo("appointmentDateTime", currentDateString)
+                .get()
+                .await()
+
+            // Get a list of unique patient IDs from these appointments
+            val patientIds = appointments.documents.mapNotNull { it.getString("patientId") }.distinct()
+
+            // Fetch the patient data for each ID
+            for (patientId in patientIds) {
+                val patientSnapshot = db.collection("patients").document(patientId).get().await()
+                val patient = patientSnapshot.toObject(Patient::class.java)
+
+                // Check if the patient has only one appointment (new patient)
+                val patientAppointments = appointments.documents.filter { it.getString("patientId") == patientId }
+                if (patient != null && patientAppointments.size == 1) {
+                    patient.userId = patientId // Set the document ID as userId
+                    newPatients.add(patient)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching new patients: ${e.message}")
+        }
+        return newPatients
+    }
+
+    suspend fun getFollowUpPatients(doctorId: String): List<Patient> {
+        val followUpPatients = mutableListOf<Patient>()
+        try {
+            // Get the current date and the date one month ago
+            val currentDate = Calendar.getInstance()
+            val oneMonthAgo = Calendar.getInstance()
+            oneMonthAgo.add(Calendar.MONTH, -1)
+
+            // Format the dates to strings for comparison
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val currentDateString = formatter.format(currentDate.time)
+            val oneMonthAgoString = formatter.format(oneMonthAgo.time)
+
+            // Fetch all appointments for the doctor within the last month
+            val appointments = db.collection("appointments")
+                .whereEqualTo("doctorId", doctorId)
+                .whereGreaterThanOrEqualTo("appointmentDateTime", oneMonthAgoString)
+                .whereLessThanOrEqualTo("appointmentDateTime", currentDateString)
+                .get()
+                .await()
+
+            // Get a list of unique patient IDs from these appointments
+            val patientIds = appointments.documents.mapNotNull { it.getString("patientId") }.distinct()
+
+            // Fetch the patient data for each ID
+            for (patientId in patientIds) {
+                val patientSnapshot = db.collection("patients").document(patientId).get().await()
+                val patient = patientSnapshot.toObject(Patient::class.java)
+
+                // Check if the patient has more than one appointment (follow-up patient)
+                val patientAppointments = appointments.documents.filter { it.getString("patientId") == patientId }
+                if (patient != null && patientAppointments.size > 1) {
+                    patient.userId = patientId // Set the document ID as userId
+                    followUpPatients.add(patient)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching follow-up patients: ${e.message}")
+        }
+        return followUpPatients
+    }
+
+    suspend fun getAppointmentRequests(doctorId: String): List<Appointment> {
         return try {
             val snapshot = db.collection("appointments")
                 .whereEqualTo("doctorId", doctorId)
+                .whereEqualTo("status", "pending")
                 .get()
                 .await()
             snapshot.toObjects(Appointment::class.java)
         } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error fetching appointments: ${e.message}")
+            Log.e("FirebaseRepository", "Error fetching appointment requests: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun updateAppointmentStatus(appointmentId: String, status: String) {
+        try {
+            db.collection("appointments").document(appointmentId)
+                .update("status", status)
+                .await()
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error updating appointment status: ${e.message}")
+            throw e
+        }
+    }
+
+    suspend fun getExpiredAppointments(userId: String, userType: String, currentTime: String): List<Appointment> {
+        return try {
+            val query = db.collection("appointments")
+                .whereLessThan("appointmentDateTime", currentTime)
+                .whereEqualTo(userType, userId)
+                .whereEqualTo("status", "pending")
+
+            val userSpecificQuery = if (userType == "doctorId") {
+                query.whereEqualTo("doctorId", userId)
+            } else {
+                query.whereEqualTo("patientId", userId)
+            }
+
+            val snapshot = userSpecificQuery.get().await()
+            snapshot.toObjects(Appointment::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching expired appointments: ${e.message}")
             emptyList()
         }
     }

@@ -18,7 +18,7 @@ class DoctorAppointmentsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_doctor_appointments)
 
-        appointmentsRecyclerView = findViewById(R.id.appointmentsRecyclerView)
+        appointmentsRecyclerView = findViewById(R.id.doctorAppointmentsRecyclerView) // Use the new ID
         appointmentsAdapter = DoctorAppointmentsAdapter(emptyList())
 
         appointmentsRecyclerView.apply {

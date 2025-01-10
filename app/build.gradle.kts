@@ -54,6 +54,7 @@ dependencies {
    // implementation ("com.google.android.material:material:1.15.0")
 
     implementation ("com.github.bumptech.glide:glide:4.16.0")
+    implementation(libs.firebase.messaging)
     annotationProcessor ("com.github.bumptech.glide:compiler:4.13.0")
 
     implementation ("com.google.android.material:material:1.7.0")

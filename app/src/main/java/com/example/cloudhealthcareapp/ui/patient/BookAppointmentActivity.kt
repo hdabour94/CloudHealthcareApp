@@ -52,7 +52,7 @@ class BookAppointmentActivity : AppCompatActivity() {
         // Initialize the adapter with an empty list
         availableTimesAdapter = AvailableTimesAdapter(emptyList()) { time ->
             selectedTime = time
-            Toast.makeText(this, "Selected time: $time", Toast.LENGTH_SHORT).show()
+          //  Toast.makeText(this, "Selected time: $time", Toast.LENGTH_SHORT).show()
         }
 
         availableTimesRecyclerView.apply {
@@ -101,6 +101,7 @@ class BookAppointmentActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please select date and time", Toast.LENGTH_SHORT).show()
             }
+
         }
 
         viewModel.appointmentBookingResult.observe(this) { success ->
@@ -127,6 +128,8 @@ class BookAppointmentActivity : AppCompatActivity() {
     }
 
     private fun showDatePicker() {
+
+
         val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             calendar.set(Calendar.YEAR, year)
             calendar.set(Calendar.MONTH, month)

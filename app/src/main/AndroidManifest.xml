@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
         android:name=".CloudHealthcareApp"
         android:allowBackup="true"
@@ -13,6 +13,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CloudHealthcareApp">
+
+        <service
+            android:name=".services.AppointmentCleanupJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
+
+
+
 
         <activity
             android:name=".ui.LoginActivity"
@@ -31,6 +39,13 @@
         <activity android:name=".ui.patient.UploadMedicalRecordActivity" />
         <activity android:name=".ui.doctor.DoctorHomeActivity" />
         <activity android:name=".ui.doctor.DoctorAppointmentsActivity" />
+        <activity
+            android:name=".ui.doctor.PatientListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.doctor.AppointmentRequestsActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.patient.PatientAppointmentsActivity"
             android:exported="false" />

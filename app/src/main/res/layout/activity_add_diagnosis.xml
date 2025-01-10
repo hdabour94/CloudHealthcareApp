@@ -5,12 +5,13 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <EditText
-        android:id="@+id/patientIdEditText"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/patientNameTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="Patient ID"
-        android:minHeight="48dp" />
+        android:layout_marginBottom="16dp"
+        android:text="Patient: "
+        android:textSize="18sp" />
 
     <EditText
         android:id="@+id/diagnosisEditText"
@@ -32,6 +33,13 @@
         android:layout_height="wrap_content"
         android:hint="Notes"
         android:minHeight="48dp" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/saveButton"
