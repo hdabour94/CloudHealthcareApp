@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,15 +16,22 @@ import android.widget.VideoView
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-//import com.example.cloudhealthcareapp.BuildConfig
+
+//import com.example.cloudhealthcareapp.BuildConfig // Import BuildConfig
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.MedicalRecord
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
+import firebase.com.protolitewrapper.BuildConfig
 import java.io.File
+import java.io.IOException
 
 class MedicalRecordsAdapter(
     private val context: Context,
     private var medicalRecords: List<MedicalRecord>
 ) : RecyclerView.Adapter<MedicalRecordsAdapter.MedicalRecordViewHolder>() {
+
+    private val storage = Firebase.storage
 
     class MedicalRecordViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val fileTypeImageView: ImageView = view.findViewById(R.id.fileTypeImageView)
@@ -84,7 +92,7 @@ class MedicalRecordsAdapter(
         // Set the click listener for the entire item view
         holder.itemView.setOnClickListener {
             medicalRecord.fileUrl?.let { fileUrl ->
-                openFile(context, fileUrl)
+                downloadAndOpenFile(context, fileUrl)
             }
         }
     }
@@ -96,18 +104,39 @@ class MedicalRecordsAdapter(
         notifyDataSetChanged()
     }
 
-    private fun openFile(context: Context, fileUrl: String) {
-        // Assuming the fileUrl is a content URI or a public URL
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.setDataAndType(Uri.parse(fileUrl), getMimeType(fileUrl))
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+    private fun downloadAndOpenFile(context: Context, fileUrl: String) {
+        val storageRef = storage.getReferenceFromUrl(fileUrl)
+        val localFile = createTempFile(fileUrl)
 
-        // Check if there's an app to handle the intent
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            Toast.makeText(context, "No app found to open this file type.", Toast.LENGTH_SHORT).show()
+        storageRef.getFile(localFile).addOnSuccessListener {
+            // Local temp file has been created
+            val fileUri: Uri = FileProvider.getUriForFile(
+                context,
+                "${BuildConfig.APPLICATION_ID}.fileprovider",
+                localFile
+            )
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(fileUri, getMimeType(fileUrl))
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+
+            try {
+                context.startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(context, "No app found to open this file type.", Toast.LENGTH_SHORT).show()
+                Log.e("MedicalRecordsAdapter", "No activity found to handle file: $fileUrl", e)
+            }
+        }.addOnFailureListener { exception ->
+            // Handle any errors
+            Log.e("MedicalRecordsAdapter", "Error downloading file: $fileUrl", exception)
+            Toast.makeText(context, "Failed to download file.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun createTempFile(fileUrl: String): File {
+        val extension = fileUrl.substringAfterLast('.', "")
+        return File.createTempFile("tempFile", ".$extension", context.cacheDir)
     }
 
     private fun getMimeType(url: String): String {

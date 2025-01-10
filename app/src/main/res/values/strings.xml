@@ -9,4 +9,5 @@
         <item>Patient</item>
         <item>Doctor</item>
     </string-array>
+    <string name="file_provider_authority">com.example.cloudhealthcareapp.fileprovider</string>
 </resources>
