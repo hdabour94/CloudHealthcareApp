@@ -41,7 +41,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.doctor.UserDetailsActivity"
+            android:name=".ui.doctor.PatientDetailsActivity"
             android:exported="false" />
         <activity
             android:name=".ui.doctor.WritePrescriptionActivity"

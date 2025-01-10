@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cloudhealthcareapp.R
+import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.viewmodel.DoctorViewModel
 
 class PatientListActivity : AppCompatActivity() {
@@ -26,10 +27,9 @@ class PatientListActivity : AppCompatActivity() {
         newPatientsRecyclerView = findViewById(R.id.newPatientsRecyclerView)
         followUpPatientsRecyclerView = findViewById(R.id.followUpPatientsRecyclerView)
 
-        // Initialize the adapters with an empty list and a click listener
         newPatientsAdapter = PatientsAdapter(emptyList()) { patient ->
             // Start UserDetailsActivity with patientId and userType
-            val intent = Intent(this, UserDetailsActivity::class.java)
+            val intent = Intent(this, PatientDetailsActivity::class.java)
             intent.putExtra("userId", patient.userId)
             intent.putExtra("userType", "Patient")
             startActivity(intent)
@@ -37,7 +37,7 @@ class PatientListActivity : AppCompatActivity() {
 
         followUpPatientsAdapter = PatientsAdapter(emptyList()) { patient ->
             // Start UserDetailsActivity with patientId and userType
-            val intent = Intent(this, UserDetailsActivity::class.java)
+            val intent = Intent(this, PatientDetailsActivity::class.java)
             intent.putExtra("userId", patient.userId)
             intent.putExtra("userType", "Patient")
             startActivity(intent)

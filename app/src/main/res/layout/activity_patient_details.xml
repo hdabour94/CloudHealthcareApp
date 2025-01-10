@@ -67,10 +67,23 @@
             android:minHeight="48dp" />
 
         <Button
-            android:id="@+id/updateButton"
+            android:id="@+id/addDiagnosisButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Update" />
+            android:layout_marginTop="16dp"
+            android:text="Add Diagnosis" />
+
+        <Button
+            android:id="@+id/writePrescriptionButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Write Prescription" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/medicalRecordsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"/>
 
     </LinearLayout>
 </ScrollView>
