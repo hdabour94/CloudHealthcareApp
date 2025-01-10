@@ -13,6 +13,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 
@@ -281,6 +282,7 @@ class FirebaseRepository {
                     patients.add(patientData)
                 }
             }
+            Log.d("FirebaseRepository", "Patients fetched for doctor $doctorId: ${patients.size}")
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error fetching patients for doctor: ${e.message}")
         }
@@ -414,6 +416,20 @@ class FirebaseRepository {
         } catch (e: Exception) {
             Log.e("FirebaseRepository", "Error fetching expired appointments: ${e.message}")
             emptyList()
+        }
+    }
+
+    suspend fun savePrescription(patientId: String, prescriptionText: String) {
+        try {
+            val prescription = hashMapOf(
+                "prescriptionText" to prescriptionText,
+                "date" to SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            )
+            db.collection("patients").document(patientId)
+                .collection("prescriptions").add(prescription).await()
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error saving prescription: ${e.message}")
+            throw e
         }
     }
 

@@ -15,8 +15,8 @@
             android:layout_height="150dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
-            android:src="@drawable/ic_profile_placeholder"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_profile_placeholder" />
 
         <ImageButton
             android:id="@+id/idCardImageButton"
@@ -24,8 +24,8 @@
             android:layout_height="150dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
-            android:src="@drawable/ic_id_card_placeholder"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_id_card_placeholder" />
 
         <EditText
             android:id="@+id/fullNameEditText"
@@ -71,6 +71,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Update" />
+        <Button
+            android:id="@+id/addDiagnosisButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Add Diagnosis" />
+        <Button
+            android:id="@+id/writePrescriptionButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Write Prescription" />
 
     </LinearLayout>
 </ScrollView>

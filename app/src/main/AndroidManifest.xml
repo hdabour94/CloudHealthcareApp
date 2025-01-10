@@ -31,6 +31,13 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.doctor.UserDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.doctor.WritePrescriptionActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.admin.UserDetailsActivity"
             android:exported="false" />
         <activity android:name=".ui.RegisterActivity" />

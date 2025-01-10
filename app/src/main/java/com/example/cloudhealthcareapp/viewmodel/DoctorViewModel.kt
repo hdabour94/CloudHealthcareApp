@@ -6,11 +6,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cloudhealthcareapp.models.Appointment
+import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.repository.FirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 class DoctorViewModel : ViewModel() {
 
@@ -39,6 +42,9 @@ class DoctorViewModel : ViewModel() {
 
     private val _appointmentRejectionResult = MutableLiveData<Boolean>()
     val appointmentRejectionResult: LiveData<Boolean> = _appointmentRejectionResult
+
+    private val _prescriptionSaveResult = MutableLiveData<Boolean>()
+    val prescriptionSaveResult: LiveData<Boolean> = _prescriptionSaveResult
 
     fun getAppointmentsForDoctor() {
         val doctorId = FirebaseAuth.getInstance().currentUser?.uid
@@ -98,8 +104,6 @@ class DoctorViewModel : ViewModel() {
         }
     }
 
-    // ... other code
-
     fun addDiagnosis(record: MedicalRecord) {
         viewModelScope.launch {
             try {
@@ -111,7 +115,6 @@ class DoctorViewModel : ViewModel() {
             }
         }
     }
-
     fun getAppointmentRequests() {
         val doctorId = FirebaseAuth.getInstance().currentUser?.uid
         if (doctorId != null) {
@@ -149,6 +152,16 @@ class DoctorViewModel : ViewModel() {
             }
         }
     }
-
+    fun savePrescription(patientId: String, prescriptionText: String) {
+        viewModelScope.launch {
+            try {
+                repository.savePrescription(patientId, prescriptionText)
+                _prescriptionSaveResult.postValue(true)
+            } catch (e: Exception) {
+                _prescriptionSaveResult.postValue(false)
+                Log.e("DoctorViewModel", "Error saving prescription: ${e.message}")
+            }
+        }
+    }
 
 }

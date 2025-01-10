@@ -1,5 +1,6 @@
 package com.example.cloudhealthcareapp.ui.doctor
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -25,8 +26,22 @@ class PatientListActivity : AppCompatActivity() {
         newPatientsRecyclerView = findViewById(R.id.newPatientsRecyclerView)
         followUpPatientsRecyclerView = findViewById(R.id.followUpPatientsRecyclerView)
 
-        newPatientsAdapter = PatientsAdapter(emptyList())
-        followUpPatientsAdapter = PatientsAdapter(emptyList())
+        // Initialize the adapters with an empty list and a click listener
+        newPatientsAdapter = PatientsAdapter(emptyList()) { patient ->
+            // Start UserDetailsActivity with patientId and userType
+            val intent = Intent(this, UserDetailsActivity::class.java)
+            intent.putExtra("userId", patient.userId)
+            intent.putExtra("userType", "Patient")
+            startActivity(intent)
+        }
+
+        followUpPatientsAdapter = PatientsAdapter(emptyList()) { patient ->
+            // Start UserDetailsActivity with patientId and userType
+            val intent = Intent(this, UserDetailsActivity::class.java)
+            intent.putExtra("userId", patient.userId)
+            intent.putExtra("userType", "Patient")
+            startActivity(intent)
+        }
 
         newPatientsRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@PatientListActivity)
@@ -40,20 +55,22 @@ class PatientListActivity : AppCompatActivity() {
 
         // Observe LiveData for all patients
         viewModel.patients.observe(this) { patients ->
-            // Assuming 'patients' is a List<Patient> that contains all patients for the doctor
+            // Log the number of patients fetched
+            Log.d("PatientListActivity", "All patients fetched: ${patients.size}")
             newPatientsAdapter.updatePatients(patients)
         }
 
         // Observe LiveData for new patients
         viewModel.newPatients.observe(this) { newPatients ->
-            // This is where you update the adapter with the list of new patients
-            // Since new patients are a subset of all patients, this may not be necessary
+            // Log the number of new patients fetched
+            Log.d("PatientListActivity", "New patients fetched: ${newPatients.size}")
             // newPatientsAdapter.updatePatients(newPatients)
         }
 
         // Observe LiveData for follow-up patients
         viewModel.followUpPatients.observe(this) { followUpPatients ->
-            // This is where you update the adapter with the list of follow-up patients
+            // Log the number of follow-up patients fetched
+            Log.d("PatientListActivity", "Follow-up patients fetched: ${followUpPatients.size}")
             // followUpPatientsAdapter.updatePatients(followUpPatients)
         }
 
