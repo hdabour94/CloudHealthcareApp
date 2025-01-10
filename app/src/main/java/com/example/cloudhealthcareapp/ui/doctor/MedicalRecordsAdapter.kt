@@ -16,14 +16,15 @@ import android.widget.VideoView
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-
-import com.example.cloudhealthcareapp.BuildConfig // Import BuildConfig
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import java.io.File
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MedicalRecordsAdapter(
     private val context: Context,
@@ -111,7 +112,7 @@ class MedicalRecordsAdapter(
             // Local temp file has been created
             val fileUri: Uri = FileProvider.getUriForFile(
                 context,
-                "${BuildConfig.APPLICATION_ID}.fileprovider",
+                "${context.packageName}.fileprovider",
                 localFile
             )
 
@@ -135,7 +136,22 @@ class MedicalRecordsAdapter(
 
     private fun createTempFile(fileUrl: String): File {
         val extension = fileUrl.substringAfterLast('.', "")
-        return File.createTempFile("tempFile", ".$extension", context.cacheDir)
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val tempFileName = "TEMP_" + timeStamp + "_"
+
+        // Use the cache directory
+        val storageDir: File? = context.cacheDir
+
+        return try {
+            File.createTempFile(
+                tempFileName,  /* prefix */
+                ".$extension",  /* suffix */
+                storageDir      /* directory */
+            )
+        } catch (e: IOException) {
+            Log.e("MedicalRecordsAdapter", "Error creating temp file: $fileUrl", e)
+            throw e
+        }
     }
 
     private fun getMimeType(url: String): String {

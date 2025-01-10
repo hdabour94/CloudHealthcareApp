@@ -18,6 +18,8 @@ firebaseStorageKtx = "21.0.1"
 firebaseMessaging = "24.1.0"
 firebaseFunctionsKtx = "21.1.0"
 firebaseFunctions = "21.1.0"
+androidGradlePlugin = "8.5.0"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,7 +47,7 @@ firebase-functions-ktx = { group = "com.google.firebase", name = "firebase-funct
 firebase-functions = { group = "com.google.firebase", name = "firebase-functions", version.ref = "firebaseFunctions" }
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 

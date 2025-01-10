@@ -1,4 +1,5 @@
 plugins {
+//    id ("com.android.application' version '8.2.2") apply false
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
