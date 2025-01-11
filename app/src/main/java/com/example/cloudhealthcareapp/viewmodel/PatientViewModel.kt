@@ -125,7 +125,7 @@ class PatientViewModel : ViewModel() {
                     val allTimes = generateAllTimes(selectedDate, startCalendar, endCalendar)
                     val filteredTimes = allTimes.filter { time ->
                         !bookedTimes.any { bookedTime ->
-                            isTimeWithinBookedRange(time, bookedTime, 30)
+                            isTimeWithinBookedRange(time, bookedTime, 29)
                         }
                     }
                     availableTimes.postValue(filteredTimes)
@@ -166,21 +166,24 @@ class PatientViewModel : ViewModel() {
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val timeCal = Calendar.getInstance()
         val bookedCal = Calendar.getInstance()
-        val endBookedCal = Calendar.getInstance() // Calendar for the end of the booked slot
+        val endBookedCal = Calendar.getInstance()
 
         try {
             timeCal.time = timeFormat.parse(time) ?: return false
             bookedCal.time = timeFormat.parse(bookedTime) ?: return false
-            endBookedCal.time = timeFormat.parse(bookedTime) ?: return false // Initialize endBookedCal
+            endBookedCal.time = timeFormat.parse(bookedTime) ?: return false
+            endBookedCal.add(Calendar.MINUTE, duration)
         } catch (e: Exception) {
             Log.e("PatientViewModel", "Error parsing time: ${e.message}")
             return false
         }
 
-        endBookedCal.add(Calendar.MINUTE, duration) // Add the duration to the booked time
-
-        // Check if the time slot starts before the booked slot ends AND ends after the booked slot starts
-        return !(timeCal.before(bookedCal) && !timeCal.before(endBookedCal) || timeCal.after(endBookedCal))
+        // Check if the start of the time slot is before the end of the booked slot
+        // AND the end of the time slot is after the start of the booked slot
+        return timeCal.before(endBookedCal) && !timeCal.before(bookedCal)
+                || !timeCal.after(endBookedCal) && timeCal.after(bookedCal)
+                || timeCal.compareTo(bookedCal) == 0
+                || timeCal.compareTo(endBookedCal) == 0
     }
 
     private fun generateAllTimes(selectedDate: String, startCalendar: Calendar, endCalendar: Calendar): MutableList<String> {
