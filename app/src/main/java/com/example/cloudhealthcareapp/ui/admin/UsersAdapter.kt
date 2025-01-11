@@ -1,5 +1,6 @@
 package com.example.cloudhealthcareapp.ui.admin
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,6 +35,7 @@ class UsersAdapter(
         return UserViewHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         val user = users[position]
         holder.userIdTextView.text = "ID: ${user.userId}"

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.ui.LoginActivity
+import com.example.cloudhealthcareapp.ui.doctor.MedicalRecordsActivity
 import com.example.cloudhealthcareapp.viewmodel.PatientViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
@@ -26,8 +27,7 @@ class PatientHomeActivity : AppCompatActivity() {
     private lateinit var viewAppointmentsButton: Button
     private lateinit var welcomeTextView: TextView
     private lateinit var signOutButton: Button
-    private lateinit var viewDiagnosisButton: Button
-    private lateinit var viewPrescriptionsButton: Button
+    private lateinit var viewMedicalRecordsButton: Button // Correct
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,8 +38,7 @@ class PatientHomeActivity : AppCompatActivity() {
         viewAppointmentsButton = findViewById(R.id.viewAppointmentsButton)
         welcomeTextView = findViewById(R.id.welcomeTextView)
         signOutButton = findViewById(R.id.signOutButton)
-        viewDiagnosisButton = findViewById(R.id.viewDiagnosisButton)
-        viewPrescriptionsButton = findViewById(R.id.viewPrescriptionsButton)
+        viewMedicalRecordsButton = findViewById(R.id.viewMedicalRecordsButton) // Correct
 
         doctorsAdapter = DoctorsAdapter(emptyList()) { doctor ->
             val intent = Intent(this, BookAppointmentActivity::class.java)
@@ -73,22 +72,10 @@ class PatientHomeActivity : AppCompatActivity() {
             finish()
         }
 
-        viewDiagnosisButton.setOnClickListener {
+        viewMedicalRecordsButton.setOnClickListener {
             val patientId = FirebaseAuth.getInstance().currentUser?.uid
             if (patientId != null) {
-                val intent = Intent(this, PatientDiagnosisActivity::class.java)
-                intent.putExtra("patientId", patientId)
-                startActivity(intent)
-            } else {
-                // Handle the case where patientId is null
-                Toast.makeText(this, "Error: User not signed in.", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        viewPrescriptionsButton.setOnClickListener {
-            val patientId = FirebaseAuth.getInstance().currentUser?.uid
-            if (patientId != null) {
-                val intent = Intent(this, PatientPrescriptionsActivity::class.java)
+                val intent = Intent(this, MedicalRecordsActivity::class.java)
                 intent.putExtra("patientId", patientId)
                 startActivity(intent)
             } else {

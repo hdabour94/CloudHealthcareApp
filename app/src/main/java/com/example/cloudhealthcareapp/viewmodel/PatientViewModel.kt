@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.cloudhealthcareapp.models.Appointment
 import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.MedicalRecord
+import com.example.cloudhealthcareapp.models.MedicalRecordItem
+import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.repository.FirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -37,6 +39,9 @@ class PatientViewModel : ViewModel() {
 
     private val _prescriptions = MutableLiveData<List<Map<String, String>>>()
     val prescriptions: LiveData<List<Map<String, String>>> = _prescriptions
+
+    private val _medicalRecords = MutableLiveData<List<MedicalRecord>>()
+    val medicalRecords: LiveData<List<MedicalRecord>> = _medicalRecords
 
     fun getDoctors() {
         viewModelScope.launch {
@@ -242,6 +247,17 @@ class PatientViewModel : ViewModel() {
                 _prescriptions.postValue(prescriptions)
             } catch (e: Exception) {
                 Log.e("PatientViewModel", "Error fetching prescriptions: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchMedicalRecords(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val records = repository.getMedicalRecordsForPatient(patientId)
+                _medicalRecords.postValue(records)
+            } catch (e: Exception) {
+                Log.e("PatientViewModel", "Error fetching medical records: ${e.message}")
             }
         }
     }

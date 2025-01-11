@@ -69,15 +69,6 @@ class FirebaseRepository {
         }
     }
 
-    suspend fun addMedicalRecord(record: MedicalRecord) {
-        try {
-            db.collection("medicalRecords").document(record.recordId!!).set(record).await()
-        } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error adding medical record: ${e.message}")
-            throw e
-        }
-    }
-
     suspend fun getAllUsers(): List<User> {
         val users = mutableListOf<User>()
         try {
@@ -269,6 +260,77 @@ class FirebaseRepository {
         }
     }
 
+
+
+    suspend fun getPatient(patientId: String): Patient? {
+        return try {
+            val document = db.collection("patients").document(patientId).get().await()
+            document.toObject(Patient::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching patient: ${e.message}", e)
+            null
+        }
+    }
+
+    fun sendNotificationToPatient(token: String, title: String, body: String) {
+        val data = hashMapOf(
+            "to" to token,
+            "notification" to hashMapOf(
+                "title" to title,
+                "body" to body
+            )
+        )
+
+        functions
+            .getHttpsCallable("sendNotification")
+            .call(data)
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    val e = task.exception
+                    Log.w("FirebaseRepository", "sendNotification:failure", e)
+                } else {
+                    Log.d("FirebaseRepository", "sendNotification:success")
+                }
+            }
+    }
+
+    suspend fun getMedicalRecordsForPatient(patientId: String): List<MedicalRecord> {
+        return try {
+            val snapshot = db.collection("medicalRecords")
+                .whereEqualTo("patientId", patientId)
+                .get()
+                .await()
+            snapshot.toObjects(MedicalRecord::class.java)
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error fetching medical records: ${e.message}", e)
+            emptyList()
+        }
+    }
+
+
+    suspend fun addDiagnosis(patientId: String, diagnosis: String) {
+        try {
+            val diagnosisRecord = hashMapOf(
+                "diagnosis" to diagnosis,
+                "date" to SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            )
+            db.collection("patients").document(patientId)
+                .collection("diagnoses").add(diagnosisRecord).await()
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "Error adding diagnosis: ${e.message}")
+            throw e
+        }
+    }
+
+suspend fun addMedicalRecord(record: MedicalRecord) {
+    try {
+        db.collection("medicalRecords").document(record.recordId!!).set(record).await()
+    } catch (e: Exception) {
+        Log.e("FirebaseRepository", "Error adding medical record: ${e.message}")
+        throw e
+    }
+}
+
     suspend fun getPatientsForDoctor(doctorId: String): List<Patient> {
         val patients = mutableListOf<Patient>()
         try {
@@ -291,16 +353,6 @@ class FirebaseRepository {
             Log.e("FirebaseRepository", "Error fetching patients for doctor: ${e.message}")
         }
         return patients
-    }
-
-    suspend fun getPatient(patientId: String): Patient? {
-        return try {
-            val document = db.collection("patients").document(patientId).get().await()
-            document.toObject(Patient::class.java)
-        } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error fetching patient: ${e.message}", e)
-            null
-        }
     }
 
     suspend fun getNewPatients(doctorId: String): List<Patient> {
@@ -433,24 +485,12 @@ class FirebaseRepository {
         }
     }
 
-    suspend fun savePrescription(patientId: String, prescriptionText: String) {
-        try {
-            val prescription = hashMapOf(
-                "prescriptionText" to prescriptionText,
-                "date" to SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            )
-            db.collection("patients").document(patientId)
-                .collection("prescriptions").add(prescription).await()
-        } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error saving prescription: ${e.message}")
-            throw e
-        }
-    }
+
 
     suspend fun getDiagnosisForPatient(patientId: String): List<Map<String, String>> {
         return try {
             val snapshot = db.collection("patients").document(patientId)
-                .collection("diagnoses")
+                .collection("diagnosis")
                 .get()
                 .await()
             snapshot.documents.mapNotNull { doc ->
@@ -467,7 +507,6 @@ class FirebaseRepository {
             emptyList()
         }
     }
-
     suspend fun getPrescriptionsForPatient(patientId: String): List<Map<String, String>> {
         return try {
             val snapshot = db.collection("patients").document(patientId)
@@ -488,59 +527,6 @@ class FirebaseRepository {
             emptyList()
         }
     }
-
-
-
-    fun sendNotificationToPatient(token: String, title: String, body: String) {
-        val data = hashMapOf(
-            "to" to token,
-            "notification" to hashMapOf(
-                "title" to title,
-                "body" to body
-            )
-        )
-
-        functions
-            .getHttpsCallable("sendNotification")
-            .call(data)
-            .addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    val e = task.exception
-                    Log.w("FirebaseRepository", "sendNotification:failure", e)
-                } else {
-                    Log.d("FirebaseRepository", "sendNotification:success")
-                }
-            }
-    }
-
-    suspend fun getMedicalRecordsForPatient(patientId: String): List<MedicalRecord> {
-        return try {
-            val snapshot = db.collection("medicalRecords")
-                .whereEqualTo("patientId", patientId)
-                .get()
-                .await()
-            snapshot.toObjects(MedicalRecord::class.java)
-        } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error fetching medical records: ${e.message}", e)
-            emptyList()
-        }
-    }
-
-
-    suspend fun addDiagnosis(patientId: String, diagnosis: String) {
-        try {
-            val diagnosisRecord = hashMapOf(
-                "diagnosis" to diagnosis,
-                "date" to SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            )
-            db.collection("patients").document(patientId)
-                .collection("diagnoses").add(diagnosisRecord).await()
-        } catch (e: Exception) {
-            Log.e("FirebaseRepository", "Error adding diagnosis: ${e.message}")
-            throw e
-        }
-    }
-
 
 
 

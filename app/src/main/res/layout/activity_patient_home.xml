@@ -31,16 +31,10 @@
         android:text="View Appointments" />
 
     <Button
-        android:id="@+id/viewDiagnosisButton"
+        android:id="@+id/viewMedicalRecordsButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="View Diagnosis" />
-
-    <Button
-        android:id="@+id/viewPrescriptionsButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="View Prescriptions" />
+        android:text="View Medical Records" />
 
     <Button
         android:id="@+id/signOutButton"

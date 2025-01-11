@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -34,7 +35,6 @@
         <activity android:name=".ui.doctor.PatientListActivity" />
         <activity android:name=".ui.doctor.AppointmentRequestsActivity" />
         <activity android:name=".ui.doctor.AddDiagnosisActivity" />
-        <activity android:name=".ui.doctor.WritePrescriptionActivity" />
         <activity android:name=".ui.doctor.PatientDetailsActivity" />
         <activity android:name=".ui.doctor.ViewImageActivity" />
         <activity android:name=".ui.admin.AdminHomeActivity" />
@@ -44,6 +44,7 @@
         <activity android:name=".ui.patient.PatientDiagnosisActivity" />
         <activity android:name=".ui.patient.PatientPrescriptionsActivity" />
         <activity android:name=".ui.doctor.MedicalRecordsActivity" />
+        <activity android:name=".ui.patient.MedicalRecordsActivity" />
 
 
         <service

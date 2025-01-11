@@ -1,5 +1,6 @@
 package com.example.cloudhealthcareapp.ui.doctor
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,6 +39,7 @@ class AppointmentRequestAdapter(
 
     override fun getItemCount() = appointments.size
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateAppointments(newAppointments: List<Appointment>) {
         appointments = newAppointments
         notifyDataSetChanged()

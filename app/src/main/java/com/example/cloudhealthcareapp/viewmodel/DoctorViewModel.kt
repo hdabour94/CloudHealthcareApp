@@ -8,9 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.cloudhealthcareapp.models.Appointment
 import com.example.cloudhealthcareapp.models.Doctor
 import com.example.cloudhealthcareapp.models.MedicalRecord
+import com.example.cloudhealthcareapp.models.MedicalRecordItem
 import com.example.cloudhealthcareapp.models.Patient
 import com.example.cloudhealthcareapp.repository.FirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,19 +46,11 @@ class DoctorViewModel : ViewModel() {
     private val _appointmentRejectionResult = MutableLiveData<Boolean>()
     val appointmentRejectionResult: LiveData<Boolean> = _appointmentRejectionResult
 
-    private val _prescriptionSaveResult = MutableLiveData<Boolean>()
-    val prescriptionSaveResult: LiveData<Boolean> = _prescriptionSaveResult
-
     private val _medicalRecords = MutableLiveData<List<MedicalRecord>>()
     val medicalRecords: LiveData<List<MedicalRecord>> = _medicalRecords
 
-    private val _diagnosis = MutableLiveData<List<Map<String, String>>>()
-    val diagnosis: LiveData<List<Map<String, String>>> = _diagnosis
-
-    private val _prescriptions = MutableLiveData<List<Map<String, String>>>()
-    val prescriptions: LiveData<List<Map<String, String>>> = _prescriptions
-
-
+    private val _medicalRecordItems = MutableLiveData<List<MedicalRecordItem>>()
+    val medicalRecordItems: LiveData<List<MedicalRecordItem>> = _medicalRecordItems
 
     fun getAppointmentsForDoctor() {
         val doctorId = FirebaseAuth.getInstance().currentUser?.uid
@@ -125,6 +120,7 @@ class DoctorViewModel : ViewModel() {
             }
         }
     }
+
     fun getAppointmentRequests() {
         val doctorId = FirebaseAuth.getInstance().currentUser?.uid
         if (doctorId != null) {
@@ -192,53 +188,26 @@ class DoctorViewModel : ViewModel() {
         }
     }
 
-
-
-
-    fun addDiagnosis(patientId: String, diagnosisText: String) {
+    fun fetchMedicalRecordItems(patientId: String) {
         viewModelScope.launch {
             try {
-                repository.addDiagnosis(patientId, diagnosisText)
-                _addDiagnosisResult.postValue(true)
+                val medicalRecords = repository.getMedicalRecordsForPatient(patientId)
+                val diagnosisList = repository.getDiagnosisForPatient(patientId)
+                val prescriptionsList = repository.getPrescriptionsForPatient(patientId)
+
+                val medicalRecordItems = medicalRecords.map { record ->
+                    MedicalRecordItem(
+                        recordId = record.recordId ?: "",
+                        date = record.date ?: "",
+                        diagnosis = record.diagnosis ?: "",
+                        prescription = diagnosisList.find { it["date"] == record.date }?.get("prescriptionText"),
+                        notes = record.notes
+                    )
+                }
+                _medicalRecordItems.postValue(medicalRecordItems)
             } catch (e: Exception) {
-                _addDiagnosisResult.postValue(false)
-                Log.e("DoctorViewModel", "Error adding diagnosis: ${e.message}")
+                Log.e("DoctorViewModel", "Error fetching medical record items: ${e.message}")
             }
         }
     }
-
-    fun savePrescription(patientId: String, prescriptionText: String) {
-        viewModelScope.launch {
-            try {
-                repository.savePrescription(patientId, prescriptionText)
-                _prescriptionSaveResult.postValue(true)
-            } catch (e: Exception) {
-                _prescriptionSaveResult.postValue(false)
-                Log.e("DoctorViewModel", "Error saving prescription: ${e.message}")
-            }
-        }
-    }
-
-    fun fetchDiagnosis(patientId: String) {
-        viewModelScope.launch {
-            try {
-                val diagnosis = repository.getDiagnosisForPatient(patientId)
-                _diagnosis.postValue(diagnosis)
-            } catch (e: Exception) {
-                Log.e("DoctorViewModel", "Error fetching diagnosis: ${e.message}")
-            }
-        }
-    }
-
-    fun fetchPrescriptions(patientId: String) {
-        viewModelScope.launch {
-            try {
-                val prescriptions = repository.getPrescriptionsForPatient(patientId)
-                _prescriptions.postValue(prescriptions)
-            } catch (e: Exception) {
-                Log.e("DoctorViewModel", "Error fetching prescriptions: ${e.message}")
-            }
-        }
-    }
-
 }

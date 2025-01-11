@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.ui.doctor.DiagnosisAdapter
+import com.example.cloudhealthcareapp.viewmodel.DoctorViewModel
 import com.example.cloudhealthcareapp.viewmodel.PatientViewModel
 
 class PatientDiagnosisActivity : AppCompatActivity() {

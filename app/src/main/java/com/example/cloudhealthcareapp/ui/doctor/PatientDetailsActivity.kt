@@ -34,12 +34,13 @@ class PatientDetailsActivity : AppCompatActivity() {
     private lateinit var profileImageView: ImageView
     private lateinit var idCardImageView: ImageView
     private lateinit var addDiagnosisButton: Button
-    private lateinit var writePrescriptionButton: Button
     private lateinit var viewMedicalRecordsButton: Button
     private lateinit var viewDiagnosisButton: Button
     private lateinit var viewPrescriptionsButton: Button
     private lateinit var userType: String
     private lateinit var userId: String
+    private lateinit var medicalRecordItemsRecyclerView: RecyclerView
+    private lateinit var medicalRecordItemsAdapter: MedicalRecordItemAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,13 +54,27 @@ class PatientDetailsActivity : AppCompatActivity() {
         profileImageView = findViewById(R.id.profileImageButton)
         idCardImageView = findViewById(R.id.idCardImageButton)
         addDiagnosisButton = findViewById(R.id.addDiagnosisButton)
-        writePrescriptionButton = findViewById(R.id.writePrescriptionButton)
         viewMedicalRecordsButton = findViewById(R.id.viewMedicalRecordsButton)
-        viewDiagnosisButton = findViewById(R.id.viewDiagnosisButton)
-        viewPrescriptionsButton = findViewById(R.id.viewPrescriptionsButton)
+        medicalRecordItemsRecyclerView = findViewById(R.id.medicalRecordItemsRecyclerView)
 
         userId = intent.getStringExtra("userId") ?: ""
         userType = intent.getStringExtra("userType") ?: ""
+
+        medicalRecordItemsAdapter = MedicalRecordItemAdapter(emptyList())
+        medicalRecordItemsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@PatientDetailsActivity)
+            adapter = medicalRecordItemsAdapter
+        }
+
+        // Observe the medical records LiveData
+        doctorViewModel.medicalRecordItems.observe(this) { medicalRecordItems ->
+            medicalRecordItemsAdapter.updateMedicalRecordItems(medicalRecordItems)
+        }
+
+        // Fetch medical records only if the user is a patient
+        if (userType == "Patient") {
+            doctorViewModel.fetchMedicalRecordItems(userId)
+        }
 
         viewModel.getUserDetails(userId, userType)
 
@@ -96,12 +111,6 @@ class PatientDetailsActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        writePrescriptionButton.setOnClickListener {
-            val intent = Intent(this, WritePrescriptionActivity::class.java)
-            intent.putExtra("patientId", userId)
-            startActivity(intent)
-        }
-
         viewMedicalRecordsButton.setOnClickListener {
             val intent = Intent(this, MedicalRecordsActivity::class.java)
             intent.putExtra("patientId", userId)
@@ -119,6 +128,5 @@ class PatientDetailsActivity : AppCompatActivity() {
             intent.putExtra("patientId", userId)
             startActivity(intent)
         }
-
     }
 }

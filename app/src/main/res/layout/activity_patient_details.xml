@@ -74,18 +74,12 @@
             android:text="Add Diagnosis" />
 
         <Button
-            android:id="@+id/writePrescriptionButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Write Prescription" />
-
-        <Button
             android:id="@+id/viewMedicalRecordsButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="View Medical Records" />
 
-        <Button
+   <!--     <Button
             android:id="@+id/viewDiagnosisButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -95,7 +89,13 @@
             android:id="@+id/viewPrescriptionsButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="View Prescriptions" />
+            android:text="View Prescriptions" /> -->
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/medicalRecordItemsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"/>
 
     </LinearLayout>
 </ScrollView>

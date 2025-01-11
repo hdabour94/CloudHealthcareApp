@@ -1,5 +1,6 @@
 package com.example.cloudhealthcareapp.ui.patient
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +25,7 @@ class AvailableTimesAdapter(
         return TimeViewHolder(view)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onBindViewHolder(holder: TimeViewHolder, position: Int) {
         val time = availableTimes[position]
         holder.timeTextView.text = time

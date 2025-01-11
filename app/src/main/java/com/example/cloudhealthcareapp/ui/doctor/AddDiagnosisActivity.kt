@@ -21,7 +21,7 @@ class AddDiagnosisActivity : AppCompatActivity() {
     private val viewModel: DoctorViewModel by viewModels()
     private lateinit var patientNameTextView: TextView
     private lateinit var diagnosisEditText: EditText
-    private lateinit var prescriptionEditText: EditText
+    private lateinit var prescriptionEditText: EditText //  إضافة حقل الوصفة الطبية
     private lateinit var notesEditText: EditText
     private lateinit var saveButton: Button
     private lateinit var progressBar: ProgressBar
@@ -34,7 +34,7 @@ class AddDiagnosisActivity : AppCompatActivity() {
 
         patientNameTextView = findViewById(R.id.patientNameTextView)
         diagnosisEditText = findViewById(R.id.diagnosisEditText)
-        prescriptionEditText = findViewById(R.id.prescriptionEditText)
+        prescriptionEditText = findViewById(R.id.prescriptionEditText) //  تعريف حقل الوصفة الطبية
         notesEditText = findViewById(R.id.notesEditText)
         saveButton = findViewById(R.id.saveButton)
         progressBar = findViewById(R.id.progressBar)
@@ -53,7 +53,7 @@ class AddDiagnosisActivity : AppCompatActivity() {
 
         saveButton.setOnClickListener {
             val diagnosis = diagnosisEditText.text.toString()
-            val prescription = prescriptionEditText.text.toString()
+            val prescription = prescriptionEditText.text.toString() //  قراءة نص الوصفة الطبية
             val notes = notesEditText.text.toString()
             val doctorId = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -61,7 +61,18 @@ class AddDiagnosisActivity : AppCompatActivity() {
                 progressBar.visibility = View.VISIBLE
                 saveButton.isEnabled = false
 
-                viewModel.addDiagnosis(patientId, diagnosis)
+                val record = MedicalRecord(
+                    recordId = UUID.randomUUID().toString(),
+                    patientId = patientId,
+                    doctorId = doctorId,
+                    date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                    diagnosis = diagnosis,
+                    prescription = prescription, //  إضافة الوصفة الطبية إلى السجل الطبي
+                    notes = notes,
+                    fileUrl = null // Add file URL logic if needed
+                )
+
+                viewModel.addDiagnosis(record)
             } else {
                 Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show()
             }
