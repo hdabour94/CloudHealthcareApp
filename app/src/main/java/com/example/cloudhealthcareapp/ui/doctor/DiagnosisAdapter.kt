@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.MedicalRecord
 
-class DiagnosisAdapter(private var diagnosisList: List<MedicalRecord>) :
+class DiagnosisAdapter(private var diagnosisList: List<Map<String, String>>) :
     RecyclerView.Adapter<DiagnosisAdapter.DiagnosisViewHolder>() {
 
     class DiagnosisViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -23,13 +23,13 @@ class DiagnosisAdapter(private var diagnosisList: List<MedicalRecord>) :
 
     override fun onBindViewHolder(holder: DiagnosisViewHolder, position: Int) {
         val diagnosis = diagnosisList[position]
-        holder.diagnosisDateTextView.text = diagnosis.date
-        holder.diagnosisDetailsTextView.text = diagnosis.diagnosis
+        holder.diagnosisDateTextView.text = diagnosis["date"] ?: ""
+        holder.diagnosisDetailsTextView.text = diagnosis["diagnosis"] ?: ""
     }
 
     override fun getItemCount() = diagnosisList.size
 
-    fun updateDiagnosis(newDiagnosis: List<MedicalRecord>) {
+    fun updateDiagnosis(newDiagnosis: List<Map<String, String>>) {
         diagnosisList = newDiagnosis
         notifyDataSetChanged()
     }

@@ -49,11 +49,13 @@ class DoctorViewModel : ViewModel() {
     private val _medicalRecords = MutableLiveData<List<MedicalRecord>>()
     val medicalRecords: LiveData<List<MedicalRecord>> = _medicalRecords
 
-    private val _diagnosis = MutableLiveData<List<MedicalRecord>>()
-    val diagnosis: LiveData<List<MedicalRecord>> = _diagnosis
+    private val _diagnosis = MutableLiveData<List<Map<String, String>>>()
+    val diagnosis: LiveData<List<Map<String, String>>> = _diagnosis
 
     private val _prescriptions = MutableLiveData<List<Map<String, String>>>()
     val prescriptions: LiveData<List<Map<String, String>>> = _prescriptions
+
+
 
     fun getAppointmentsForDoctor() {
         val doctorId = FirebaseAuth.getInstance().currentUser?.uid
@@ -178,6 +180,33 @@ class DoctorViewModel : ViewModel() {
             }
         }
     }
+
+    fun fetchMedicalRecords(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val records = repository.getMedicalRecordsForPatient(patientId)
+                _medicalRecords.postValue(records)
+            } catch (e: Exception) {
+                Log.e("DoctorViewModel", "Error fetching medical records: ${e.message}")
+            }
+        }
+    }
+
+
+
+
+    fun addDiagnosis(patientId: String, diagnosisText: String) {
+        viewModelScope.launch {
+            try {
+                repository.addDiagnosis(patientId, diagnosisText)
+                _addDiagnosisResult.postValue(true)
+            } catch (e: Exception) {
+                _addDiagnosisResult.postValue(false)
+                Log.e("DoctorViewModel", "Error adding diagnosis: ${e.message}")
+            }
+        }
+    }
+
     fun savePrescription(patientId: String, prescriptionText: String) {
         viewModelScope.launch {
             try {
@@ -186,16 +215,6 @@ class DoctorViewModel : ViewModel() {
             } catch (e: Exception) {
                 _prescriptionSaveResult.postValue(false)
                 Log.e("DoctorViewModel", "Error saving prescription: ${e.message}")
-            }
-        }
-    }
-    fun fetchMedicalRecords(patientId: String) {
-        viewModelScope.launch {
-            try {
-                val records = repository.getMedicalRecordsForPatient(patientId)
-                _medicalRecords.postValue(records)
-            } catch (e: Exception) {
-                Log.e("DoctorViewModel", "Error fetching medical records: ${e.message}")
             }
         }
     }

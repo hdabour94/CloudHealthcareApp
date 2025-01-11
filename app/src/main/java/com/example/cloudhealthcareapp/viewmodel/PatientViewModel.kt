@@ -32,6 +32,12 @@ class PatientViewModel : ViewModel() {
     private val _appointments = MutableLiveData<List<Appointment>>()
     val appointments: LiveData<List<Appointment>> = _appointments
 
+    private val _diagnosis = MutableLiveData<List<Map<String, String>>>()
+    val diagnosis: LiveData<List<Map<String, String>>> = _diagnosis
+
+    private val _prescriptions = MutableLiveData<List<Map<String, String>>>()
+    val prescriptions: LiveData<List<Map<String, String>>> = _prescriptions
+
     fun getDoctors() {
         viewModelScope.launch {
             try {
@@ -81,7 +87,6 @@ class PatientViewModel : ViewModel() {
             }
         }
     }
-
     fun getAvailableTimes(doctorId: String, selectedDate: String): LiveData<List<String>> {
         val availableTimes = MutableLiveData<List<String>>()
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -115,7 +120,7 @@ class PatientViewModel : ViewModel() {
                     val allTimes = generateAllTimes(selectedDate, startCalendar, endCalendar)
                     val filteredTimes = allTimes.filter { time ->
                         !bookedTimes.any { bookedTime ->
-                            isTimeWithinBookedRange(time, bookedTime, 29)
+                            isTimeWithinBookedRange(time, bookedTime, 30)
                         }
                     }
                     availableTimes.postValue(filteredTimes)
@@ -127,7 +132,6 @@ class PatientViewModel : ViewModel() {
         }
         return availableTimes
     }
-
 
     private fun isDayOffOrVacation(selectedDate: String, doctor: Doctor?): Boolean {
         if (doctor == null) return false
@@ -157,24 +161,21 @@ class PatientViewModel : ViewModel() {
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val timeCal = Calendar.getInstance()
         val bookedCal = Calendar.getInstance()
-        val endBookedCal = Calendar.getInstance()
+        val endBookedCal = Calendar.getInstance() // Calendar for the end of the booked slot
 
         try {
             timeCal.time = timeFormat.parse(time) ?: return false
             bookedCal.time = timeFormat.parse(bookedTime) ?: return false
-            endBookedCal.time = timeFormat.parse(bookedTime) ?: return false
-            endBookedCal.add(Calendar.MINUTE, duration)
+            endBookedCal.time = timeFormat.parse(bookedTime) ?: return false // Initialize endBookedCal
         } catch (e: Exception) {
             Log.e("PatientViewModel", "Error parsing time: ${e.message}")
             return false
         }
 
-        // Check if the start of the time slot is before the end of the booked slot
-        // AND the end of the time slot is after the start of the booked slot
-        return timeCal.before(endBookedCal) && !timeCal.before(bookedCal)
-                || !timeCal.after(endBookedCal) && timeCal.after(bookedCal)
-                || timeCal.compareTo(bookedCal) == 0
-                || timeCal.compareTo(endBookedCal) == 0
+        endBookedCal.add(Calendar.MINUTE, duration) // Add the duration to the booked time
+
+        // Check if the time slot starts before the booked slot ends AND ends after the booked slot starts
+        return !(timeCal.before(bookedCal) && !timeCal.before(endBookedCal) || timeCal.after(endBookedCal))
     }
 
     private fun generateAllTimes(selectedDate: String, startCalendar: Calendar, endCalendar: Calendar): MutableList<String> {
@@ -183,21 +184,16 @@ class PatientViewModel : ViewModel() {
         val calendar = Calendar.getInstance()
         val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
 
-        // Set the calendar to the start of the doctor's working hours for the selected date
-        calendar.set(Calendar.HOUR_OF_DAY, startCalendar.get(Calendar.HOUR_OF_DAY))
-        calendar.set(Calendar.MINUTE, startCalendar.get(Calendar.MINUTE))
-        calendar.set(Calendar.SECOND, 0)
-
         if (selectedDate == currentDate) {
-            val currentTime = Calendar.getInstance()
-            // If it's today, start from the next upcoming slot that is at least 30 minutes from now
-            if (currentTime.after(calendar)) {
-                calendar.time = currentTime.time
-                calendar.add(Calendar.MINUTE, 30 - calendar.get(Calendar.MINUTE) % 30)
-            }
+            // If selected date is today, start from the next time slot
+            calendar.add(Calendar.MINUTE, 30 - calendar.get(Calendar.MINUTE) % 30)
+        } else {
+            // For future dates, start from the beginning of the doctor's day
+            calendar.set(Calendar.HOUR_OF_DAY, startCalendar.get(Calendar.HOUR_OF_DAY))
+            calendar.set(Calendar.MINUTE, startCalendar.get(Calendar.MINUTE))
+            calendar.set(Calendar.SECOND, 0)
         }
 
-        // Ensure we don't go past the end time
         val endTime = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, endCalendar.get(Calendar.HOUR_OF_DAY))
             set(Calendar.MINUTE, endCalendar.get(Calendar.MINUTE))
@@ -206,7 +202,6 @@ class PatientViewModel : ViewModel() {
 
         val appointmentDuration = 30 // Duration in minutes
 
-        // Generate times from the adjusted start time until the end time
         while (calendar.before(endTime)) {
             times.add(timeFormat.format(calendar.time))
             calendar.add(Calendar.MINUTE, appointmentDuration)
@@ -225,6 +220,28 @@ class PatientViewModel : ViewModel() {
                 } catch (e: Exception) {
                     Log.e("PatientViewModel", "Error fetching appointments: ${e.message}")
                 }
+            }
+        }
+    }
+
+    fun fetchDiagnosis(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val diagnosis = repository.getDiagnosisForPatient(patientId)
+                _diagnosis.postValue(diagnosis)
+            } catch (e: Exception) {
+                Log.e("PatientViewModel", "Error fetching diagnosis: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchPrescriptions(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val prescriptions = repository.getPrescriptionsForPatient(patientId)
+                _prescriptions.postValue(prescriptions)
+            } catch (e: Exception) {
+                Log.e("PatientViewModel", "Error fetching prescriptions: ${e.message}")
             }
         }
     }

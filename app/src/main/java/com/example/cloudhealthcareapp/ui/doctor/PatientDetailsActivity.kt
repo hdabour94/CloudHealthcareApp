@@ -15,8 +15,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.cloudhealthcareapp.R
 import com.example.cloudhealthcareapp.models.Doctor
-import com.example.cloudhealthcareapp.models.MedicalRecord
 import com.example.cloudhealthcareapp.models.Patient
+import com.example.cloudhealthcareapp.ui.patient.PatientDiagnosisActivity
+import com.example.cloudhealthcareapp.ui.patient.PatientPrescriptionsActivity
 import com.example.cloudhealthcareapp.viewmodel.AdminViewModel
 import com.example.cloudhealthcareapp.viewmodel.DoctorViewModel
 
@@ -34,14 +35,11 @@ class PatientDetailsActivity : AppCompatActivity() {
     private lateinit var idCardImageView: ImageView
     private lateinit var addDiagnosisButton: Button
     private lateinit var writePrescriptionButton: Button
+    private lateinit var viewMedicalRecordsButton: Button
+    private lateinit var viewDiagnosisButton: Button
+    private lateinit var viewPrescriptionsButton: Button
     private lateinit var userType: String
     private lateinit var userId: String
-    private lateinit var medicalRecordsRecyclerView: RecyclerView
-    private lateinit var medicalRecordsAdapter: MedicalRecordsAdapter
-    private lateinit var diagnosisRecyclerView: RecyclerView
-    private lateinit var diagnosisAdapter: DiagnosisAdapter
-    private lateinit var prescriptionsRecyclerView: RecyclerView
-    private lateinit var prescriptionsAdapter: PrescriptionsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,55 +54,12 @@ class PatientDetailsActivity : AppCompatActivity() {
         idCardImageView = findViewById(R.id.idCardImageButton)
         addDiagnosisButton = findViewById(R.id.addDiagnosisButton)
         writePrescriptionButton = findViewById(R.id.writePrescriptionButton)
-        medicalRecordsRecyclerView = findViewById(R.id.medicalRecordsRecyclerView)
-        diagnosisRecyclerView = findViewById(R.id.diagnosisRecyclerView)
-        prescriptionsRecyclerView = findViewById(R.id.prescriptionsRecyclerView)
+        viewMedicalRecordsButton = findViewById(R.id.viewMedicalRecordsButton)
+        viewDiagnosisButton = findViewById(R.id.viewDiagnosisButton)
+        viewPrescriptionsButton = findViewById(R.id.viewPrescriptionsButton)
 
         userId = intent.getStringExtra("userId") ?: ""
         userType = intent.getStringExtra("userType") ?: ""
-
-        // Setup RecyclerView for medical records
-        medicalRecordsAdapter = MedicalRecordsAdapter(this, emptyList())
-        medicalRecordsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(this@PatientDetailsActivity)
-            adapter = medicalRecordsAdapter
-        }
-
-        // Setup RecyclerView for diagnosis records
-        diagnosisAdapter = DiagnosisAdapter(emptyList())
-        diagnosisRecyclerView.apply {
-            layoutManager = LinearLayoutManager(this@PatientDetailsActivity)
-            adapter = diagnosisAdapter
-        }
-
-        // Setup RecyclerView for prescriptions
-        prescriptionsAdapter = PrescriptionsAdapter(emptyList())
-        prescriptionsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(this@PatientDetailsActivity)
-            adapter = prescriptionsAdapter
-        }
-
-        // Observe the medical records LiveData
-        doctorViewModel.medicalRecords.observe(this) { medicalRecords ->
-            medicalRecordsAdapter.updateMedicalRecords(medicalRecords)
-        }
-
-        // Observe the diagnosis LiveData
-        doctorViewModel.diagnosis.observe(this) { diagnosis ->
-            diagnosisAdapter.updateDiagnosis(diagnosis)
-        }
-
-        // Observe the prescriptions LiveData
-        doctorViewModel.prescriptions.observe(this) { prescriptions ->
-            prescriptionsAdapter.updatePrescriptions(prescriptions)
-        }
-
-        // Fetch data based on user type
-        if (userType == "Patient") {
-            doctorViewModel.fetchMedicalRecords(userId)
-            doctorViewModel.fetchDiagnosis(userId)
-            doctorViewModel.fetchPrescriptions(userId)
-        }
 
         viewModel.getUserDetails(userId, userType)
 
@@ -130,6 +85,7 @@ class PatientDetailsActivity : AppCompatActivity() {
                     Glide.with(this).load(user.profileImageUrl).into(profileImageView)
                     Glide.with(this).load(user.idCardImageUrl).into(idCardImageView)
                 }
+                // Handle Administrator if needed
             }
         }
 
@@ -145,5 +101,24 @@ class PatientDetailsActivity : AppCompatActivity() {
             intent.putExtra("patientId", userId)
             startActivity(intent)
         }
+
+        viewMedicalRecordsButton.setOnClickListener {
+            val intent = Intent(this, MedicalRecordsActivity::class.java)
+            intent.putExtra("patientId", userId)
+            startActivity(intent)
+        }
+
+        viewDiagnosisButton.setOnClickListener {
+            val intent = Intent(this, PatientDiagnosisActivity::class.java)
+            intent.putExtra("patientId", userId)
+            startActivity(intent)
+        }
+
+        viewPrescriptionsButton.setOnClickListener {
+            val intent = Intent(this, PatientPrescriptionsActivity::class.java)
+            intent.putExtra("patientId", userId)
+            startActivity(intent)
+        }
+
     }
 }

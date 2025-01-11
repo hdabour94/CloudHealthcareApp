@@ -61,18 +61,7 @@ class AddDiagnosisActivity : AppCompatActivity() {
                 progressBar.visibility = View.VISIBLE
                 saveButton.isEnabled = false
 
-                val record = MedicalRecord(
-                    recordId = UUID.randomUUID().toString(),
-                    patientId = patientId,
-                    doctorId = doctorId,
-                    date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-                    diagnosis = diagnosis,
-                    prescription = prescription,
-                    notes = notes,
-                    fileUrl = null // Add file URL logic if needed
-                )
-
-                viewModel.addDiagnosis(record)
+                viewModel.addDiagnosis(patientId, diagnosis)
             } else {
                 Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show()
             }

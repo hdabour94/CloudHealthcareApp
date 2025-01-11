@@ -79,39 +79,23 @@
             android:layout_height="wrap_content"
             android:text="Write Prescription" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/medicalRecordsRecyclerView"
+        <Button
+            android:id="@+id/viewMedicalRecordsButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"/>
+            android:text="View Medical Records" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Diagnosis Records"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/diagnosisRecyclerView"
+        <Button
+            android:id="@+id/viewDiagnosisButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"/>
+            android:text="View Diagnosis" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Prescriptions"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/prescriptionsRecyclerView"
+        <Button
+            android:id="@+id/viewPrescriptionsButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"/>
+            android:text="View Prescriptions" />
 
     </LinearLayout>
 </ScrollView>

@@ -1,23 +1,12 @@
 package com.example.cloudhealthcareapp.ui.patient
 
-import android.Manifest
-import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cloudhealthcareapp.R
@@ -37,9 +26,9 @@ class PatientHomeActivity : AppCompatActivity() {
     private lateinit var viewAppointmentsButton: Button
     private lateinit var welcomeTextView: TextView
     private lateinit var signOutButton: Button
-    private var isPermissionGranted = false
+    private lateinit var viewDiagnosisButton: Button
+    private lateinit var viewPrescriptionsButton: Button
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_patient_home)
@@ -49,6 +38,8 @@ class PatientHomeActivity : AppCompatActivity() {
         viewAppointmentsButton = findViewById(R.id.viewAppointmentsButton)
         welcomeTextView = findViewById(R.id.welcomeTextView)
         signOutButton = findViewById(R.id.signOutButton)
+        viewDiagnosisButton = findViewById(R.id.viewDiagnosisButton)
+        viewPrescriptionsButton = findViewById(R.id.viewPrescriptionsButton)
 
         doctorsAdapter = DoctorsAdapter(emptyList()) { doctor ->
             val intent = Intent(this, BookAppointmentActivity::class.java)
@@ -82,6 +73,30 @@ class PatientHomeActivity : AppCompatActivity() {
             finish()
         }
 
+        viewDiagnosisButton.setOnClickListener {
+            val patientId = FirebaseAuth.getInstance().currentUser?.uid
+            if (patientId != null) {
+                val intent = Intent(this, PatientDiagnosisActivity::class.java)
+                intent.putExtra("patientId", patientId)
+                startActivity(intent)
+            } else {
+                // Handle the case where patientId is null
+                Toast.makeText(this, "Error: User not signed in.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewPrescriptionsButton.setOnClickListener {
+            val patientId = FirebaseAuth.getInstance().currentUser?.uid
+            if (patientId != null) {
+                val intent = Intent(this, PatientPrescriptionsActivity::class.java)
+                intent.putExtra("patientId", patientId)
+                startActivity(intent)
+            } else {
+                // Handle the case where patientId is null
+                Toast.makeText(this, "Error: User not signed in.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         // Get patient's name and update welcome message
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         if (currentUserId != null) {
@@ -98,51 +113,5 @@ class PatientHomeActivity : AppCompatActivity() {
                     welcomeTextView.text = "Welcome, Patient"
                 }
         }
-
-        // Check and request notification permission
-        checkNotificationPermission()
-    }
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun checkNotificationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-            == PackageManager.PERMISSION_GRANTED) {
-            // Permission is already granted
-            isPermissionGranted = true
-        } else {
-            // Permission is not granted, request it
-            requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-
-    private val requestNotificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission granted
-            isPermissionGranted = true
-            Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT).show()
-        } else {
-            // Permission denied
-            isPermissionGranted = false
-            Toast.makeText(this, "Notifications permission denied", Toast.LENGTH_SHORT).show()
-            showPermissionRationaleDialog()
-        }
-    }
-
-    private fun showPermissionRationaleDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Permission Needed")
-            .setMessage("This app requires notification permission to keep you informed. Please grant the permission in settings.")
-            .setPositiveButton("Go to Settings") { _, _ ->
-                openAppSettings()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun openAppSettings() {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        val uri = Uri.fromParts("package", packageName, null)
-        intent.data = uri
-        startActivity(intent)
     }
 }
